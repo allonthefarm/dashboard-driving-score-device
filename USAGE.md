@@ -27,7 +27,7 @@ Plug the device into the car's USB power. It boots, finds GPS, and shows live dr
 | Shortcut | Default: start or stop a trip | Default: arm the 0-60 timer (v1.5; until then, no action) |
 | View | Next screen | Turn auto screen switching on or off |
 
-- Short and long press of the Shortcut button can each be assigned to: start/stop trip, arm 0-60 (v1.5), log a fill-up (v1.5), mark an event (a timestamped bookmark in the log), dim the display, start calibration, or zero the level here.
+- Short and long press of the Shortcut button can each be assigned to: start/stop trip, arm 0-60 (v1.5), log a fill-up (v1.5), mark an event (a timestamped bookmark in the log), dim the display, start calibration, zero the level here, or switch driver.
 - Pressing View pauses auto screen switching for a short time (default 10 seconds), then it resumes (if auto switching is on).
 - Buttons are debounced. One press produces one action.
 
@@ -63,7 +63,7 @@ Screens (cycled with View):
 - **Trip summary:** score, distance, average speed, duration, event counts (shown after a trip ends, and reachable from the menu for the last trip).
 - **0-60 (v1.5):** armed state, live timer, result.
 
-Always-visible status bar: GPS state, SD state (logging, missing, full), trip active indicator, calibration status. (v2: Bluetooth on/off.)
+Always-visible status bar: GPS state, SD state (logging, missing, full), trip active indicator, calibration status, current driver number. (v2: Bluetooth on/off.)
 
 Animations are driven directly by sensor input. Screen brightness is adjustable; with the optional light sensor (later), it dims automatically.
 
@@ -100,6 +100,7 @@ Defaults are starting points to tune. "Buttons: No" means bulk or text entry, av
 | Setting | Default | Buttons | BLE (v2) |
 | --- | --- | --- | --- |
 | Units (mph/km/h, gallons/liters) | mph | Yes | Yes |
+| Current driver (Driver 1 to Driver 8) | Driver 1 | Yes | Yes |
 | Logging on/off | On | Yes | Yes |
 | Log location (GPS position) to SD card | On | Yes | Yes |
 | When SD card is full | Stop | Yes | Yes |
@@ -138,8 +139,8 @@ Logging runs in the background during any trip and is not a separate state. It n
 ### Files on the SD card
 | File | Contents |
 | --- | --- |
-| One trip file per trip, named by date and time, for example `2026-10-18_1349.csv` | Header with firmware version and calibration values, then rows at 10-20 Hz: timestamp, lat, lon (blank when location logging is off), GPS fix quality, speed, longitudinal g, lateral g, yaw rate, pitch, roll, vertical g (gravity removed), event flag (OBD fields later) |
-| `summary.csv`, one row per trip | Date, duration, distance, average speed, driving score, fuel economy score (v1.5), event counts, idle seconds, speed-swing energy per mile, time above efficient speed, estimated MPG (v1.5) |
+| One trip file per trip, named by date and time, for example `2026-10-18_1349.csv` | Header with firmware version, calibration values and the driver number, then rows at 10-20 Hz: timestamp, lat, lon (blank when location logging is off), GPS fix quality, speed, longitudinal g, lateral g, yaw rate, pitch, roll, vertical g (gravity removed), event flag (OBD fields later) |
+| `summary.csv`, one row per trip | Date, driver, duration, distance, average speed, driving score, fuel economy score (v1.5), event counts, idle seconds, speed-swing energy per mile, time above efficient speed, estimated MPG (v1.5) |
 | `zero_to_sixty.csv` (v1.5), one row per run | Date and time, time to 60, peak g, GPS quality at start and end, rolling-start flag, valid/cancelled flag |
 | `fuel_fillups.csv` (v1.5), one row per fill-up | Date and time, gallons, full or partial, price per gallon (optional), odometer (optional), GPS miles since last fill-up, GPS miles since last full fill-up, tank MPG (blank until a full fill-up closes the interval), missed-fill flag, notes |
 
@@ -167,7 +168,14 @@ The setting "Log location to SD card" (default On) controls whether positions ar
 - Score starts at 100 per trip and loses points per event: hard braking, harsh acceleration, hard cornering, and optionally speeding.
 - The score is shown on the Trip Summary screen and written to `summary.csv`.
 - Because raw events are logged, old trips can be re-scored with new rules.
-- **Planned rework direction (not final):** escalating penalties by severity tier for each event type, so extreme events cost disproportionately more (for example a small penalty at a moderate level, much larger penalties at higher levels). An event is one continuous stretch above a threshold, scored by its peak, so one long corner is not counted hundreds of times. Tiers are separate for braking, acceleration and cornering, live in config, and are tuned with real recorded drives. Open: whether a trip's penalties are totaled as-is or scaled by distance, and whether alternate scoring profiles (for example Normal and Spirited) are wanted.
+- **Planned rework direction (not final):**
+  - Each event (one continuous stretch above a threshold) is penalized by the severity tier of its peak and by its duration. Longer costs more, but growth slows with duration so one very long corner cannot wipe out the score.
+  - The number of events matters. Penalties add up and may escalate as the count rises, so one swerve to avoid a dog costs little while 35 hard corners cost a lot.
+  - Penalties are not divided by trip distance. A short aggressive stretch on an otherwise calm trip still counts.
+  - A **steadiness** component gives credit for the share of moving time driven calmly (steady speed, gentle inputs, no constant speed changes). A long calm highway stretch therefore counts in the driver's favor, but does not erase aggressive stretches. The final score combines an events component and a steadiness component, with weights in config. The score cannot go below 0.
+  - The driving score reflects the driver's inputs only. Road roughness never lowers it. Bumps can create false spikes in the accelerometer, so hard braking and acceleration are confirmed against GPS speed change, and cornering against gyro yaw rate; vertical spikes are ignored.
+  - Tiers are separate for braking, acceleration and cornering, live in config, and are tuned with real recorded drives.
+  - Open: exact penalty curves, escalation by count, steadiness weight, and whether alternate scoring profiles (for example Normal and Spirited) are wanted.
 
 ## Walkthrough: 0-60 Timer (v1.5)
 1. Arm it with the assigned Shortcut press, or from the menu. The 0-60 screen shows "Armed."
@@ -205,21 +213,29 @@ Not in v1. In v1, trips are deleted by removing the SD card and deleting files o
 4. **Erase particular data from a trip:** pick a trip and a kind of data to remove, for example only the location data (lat, lon). The rest of the trip, including the score and charts, stays. The file is rewritten safely (write a new file, then replace the old one) so a power loss cannot corrupt it.
 5. Every erase asks for confirmation, and is blocked while a trip is active or the car is moving (unless passenger mode is on).
 
-## Future: Comfort / Ride-Character Rating
-A third rating, separate from the driving score and the fuel score. It describes how the ride *feels*, which is different from how well you drove. Idea: two measures, which together place the ride among three kinds:
-- **Smoothness:** how gentle the ride is. Built from abruptness of starts and stops (jerk, the rate of change of acceleration), and vertical vibration from the road (bumpiness).
-- **Intensity:** how much g-force the ride has (the same cornering, braking and acceleration data the driving score uses).
-- **Comfortable:** high smoothness, low intensity (a luxury sedan).
-- **Rough:** low smoothness, such as off-roading in a Jeep.
-- **Spirited:** high intensity but still smooth and controlled (a sports car on a curvy back road). Not comfort-seeking, but not uncomfortable either.
-Possible display: a dot on a small map with smoothness on one axis and intensity on the other, with the three zones labeled, shown in the trip summary. Open: one rating or the two-axis view; thresholds; how a dash-mounted sensor approximates cabin comfort. To keep this possible, v1 trip files already log vertical g with gravity removed.
+## Future: Ride Character (comfort, rough, spirited)
+Separate from the driving score and the fuel score. The driving score is about what the driver did; ride character is about what the car and its passengers experienced. Road roughness affects only this, never the driving score.
+- **Three kinds of ride**, found automatically for each stretch of the trip:
+  - **Smooth:** low vibration and gentle motion (a luxury sedan).
+  - **Rough:** high vertical vibration from the road (off-roading in a Jeep, a bad road).
+  - **Spirited:** high g-force but smooth, controlled inputs on a smooth road (a sports car on a curvy back road). Not comfort-seeking, but not uncomfortable either.
+- **Measures used:** roughness (vertical vibration), intensity (cornering, braking and acceleration g), and input smoothness (jerk, the rate of change of acceleration).
+- **Output:** a **ride mix** bar showing the share of moving time that was Smooth, Rough and Spirited, plus one **Comfort score** (0-100, higher is more comfortable, lowered by roughness and abrupt starts and stops). The three kinds are deliberately not merged into one number: they are not grades of the same thing, since a spirited ride is not a worse ride.
+- **Possible later:** a "spirited smoothness" score for how smooth the inputs were during spirited stretches.
+- **Open:** thresholds, how subjective comfort should be handled (config presets), and how a dash-mounted sensor approximates cabin comfort. To keep this possible, v1 trip files log vertical g with gravity removed.
 
-## Future: Driver Profiles (NFC, optional)
-Idea, not committed. A small NFC reader recognizes a tag or keyfob to select the driver.
-1. Tap a driver's tag on the device; the screen shows the driver's name or color and a brief confirmation.
-2. Trips are tagged with the driver in `summary.csv`, and the Trip Summary and history can show scores per driver.
-3. If no tag is tapped, the device uses the last driver or asks, and a menu fallback always lets the user pick a driver without a tag.
-4. Open: what is per driver (scores, history, shortcut settings, units) versus per car (calibration, level offset, fill-up counters and mileage).
+## Driver Profiles (minimal in v1, more later)
+**v1 (minimal):** the device records which driver drove each trip, so exported data shows Driver 1, Driver 2 and so on.
+1. Settings has "Current driver" (Driver 1 to Driver 8, default Driver 1). The Shortcut button can be assigned to cycle drivers. The status bar shows the current driver number.
+2. The driver number is written to the trip file header and to `summary.csv`.
+3. The driver is locked while a trip is active.
+4. Nothing else changes per driver in v1.
+
+**Build with the future in mind (design rules for builders):**
+- Store settings in two groups from the start: **car-wide** (calibration, level offset, fill-up counters and mileage, hardware settings) and **per-driver** (slots for drivers 1-8). In v1 only the driver id and an optional name are used, but the structure exists, so per-driver settings can be added later without changing stored data or file formats.
+- Every record that is about a trip carries a driver id.
+
+**Future:** settings customized per driver (units, shortcut button actions, scoring profile, screens), per-driver history and scores, and NFC recognition (optional; may not be worth doing): tap a tag or keyfob to select the driver, with the menu always available as a fallback.
 
 ## Future: Screen Data Catalog
 The sensors can provide more than the v1 screens show. A future task is to build a complete list of everything available from the GPS, IMU and other sensors, mark what is useful to show on a screen, and then decide new screens. Starter list (to be expanded and checked against the real hardware):
@@ -247,6 +263,7 @@ A page or small program run on the owner's computer, with the SD card data:
 - **Menu locked while driving:** only View and Shortcut work; passenger mode can toggle the lock.
 - **Time unknown:** if the RTC lost power and GPS has no fix yet, files are named by a boot counter until time is known, then renamed or flagged.
 - **Corrupt or missing settings:** fall back to defaults and say so; factory reset available in the menu.
+- **Driver changed during a trip:** not allowed; the driver is locked while a trip is active and can be changed once it ends.
 - **Location logging turned off mid-trip:** later rows have blank lat/lon; the trip score and distance are unaffected.
 - **Absurd sensor values:** ignore outliers (for example a spike beyond physical limits) and flag the row.
 

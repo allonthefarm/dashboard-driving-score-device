@@ -44,7 +44,7 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - Never writes to the car's data bus (OBD-II reading only, and only in a later phase).
 - No touchscreen (not usable while driving).
 - No guarantee of exact fuel economy; real MPG comes from fill-ups, trip MPG is an estimate.
-- Not designed for multiple cars or multiple drivers in v1 (optional driver profiles are a future idea).
+- Not designed for multiple cars in v1. Drivers: v1 only logs which driver drove each trip; per-driver settings and NFC recognition are later.
 
 ## Open Questions & Risks
 - **Budget.** The owner's ceiling is about **$500**; if the plan goes past that, re-evaluate. The v1 build is estimated at about $85-160 and the full build at about $100-210 (all prices approximate and unchecked), so there is plenty of room. Parts are still split into "v1" and "add later" to keep the first build simple.
@@ -58,9 +58,9 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - **Pin count.** About 26 of roughly 34 usable pins are planned. Adding much more needs an I2C expander.
 - **IMU choice.** MPU-6050 for the first prototype (cheap, well documented); ICM-42688-P or LSM6DSO is the upgrade. BNO055 has reported I2C problems on ESP32. Final pick open.
 - **Real-time clock.** Decided: include a DS3231 RTC in v1 (shares the I2C bus, no extra pins). Risk: cheap DS3231 boards sometimes try to charge a non-rechargeable CR2032 coin cell; use a quality breakout or a rechargeable LIR2032 cell, or remove the charge resistor.
-- **Scoring rework direction (not final).** The owner wants escalating penalties: more extreme events cost disproportionately more points (for example, a larger penalty at higher g). Real-world g values need checking: everyday driving is typically under about 0.3 g, hard braking about 0.4-0.6 g, and most road cars top out near 0.8-1.0 g in corners, so examples of 1.5-2 g are race-car territory. Thresholds will be set from real recorded drives. See USAGE.md Driving Score.
-- **Comfort / ride-character rating (idea).** Needs vertical vibration and jerk data the v1 log must therefore capture. Open: one rating or a two-axis position; thresholds untested; a dash-mounted sensor approximates cabin comfort, it does not equal it; a sports car on a rough road is ambiguous.
-- **NFC driver profiles (idea).** Needs an NFC reader module (about $5-12) and tags; open: what is per driver (trips, scores, settings) versus per car (calibration, fuel counters, mileage). Phone-as-tag is unreliable with common readers, so tags or keyfobs are assumed. A menu fallback is always needed.
+- **Scoring rework direction (not final).** Escalating penalties: each event is scored by severity tier and duration (longer costs more, with slowing growth); more events cost more; penalties are not divided by trip distance; a steadiness component gives credit for calm driving; the road itself never affects the driving score. Real-world g values need checking: everyday driving is typically under about 0.3 g, hard braking about 0.4-0.6 g, and most road cars top out near 0.8-1.0 g in corners, so examples of 1.5-2 g are race-car territory. Thresholds will be set from real recorded drives. Risk: bumps cause false accelerometer spikes, so events are cross-checked against GPS speed and gyro yaw rate. See USAGE.md Driving Score.
+- **Ride character (idea).** A ride mix (smooth, rough, spirited) plus a comfort score, deliberately not merged into one number. Needs vertical vibration and jerk, so the v1 log captures vertical g. Open: thresholds (untested), how subjective comfort is handled, a dash-mounted sensor approximates cabin comfort, and a sports car on a rough road is ambiguous.
+- **Driver profiles.** v1 logs the driver number only. Open for later: what is per driver versus per car (calibration, level offset, fuel counters and mileage are per car), and NFC (reader about $5-12, tags or keyfobs; a phone as the tag is unreliable with common readers; a menu fallback is always needed).
 - **GPS module memory.** The GPS module remembers its last position on its own (it uses it for fast fixes). Decided: not cleared, unless testing on real hardware shows it is needed for the setting to work properly.
 - **Auto trip detection rules** (start on motion, end after how long stopped) are not defined yet.
 - **Mounting legality and safety.** Dash and windshield mounting rules vary by location; the menu lock while moving exists for safety, and is optional for passenger use. Owner is responsible for checking local rules.
@@ -89,8 +89,9 @@ _One line each. Full behavior is in [USAGE.md](./USAGE.md). "v1" = first usable 
 - **(v2)** Bluetooth Low Energy configuration with a physical on/off switch.
 - **(v2)** Optional small LiFePO4 battery so the unit stays on after power-off (trip summary display) and can be used on a desk.
 - **(v2 or v3)** Trip management in the menu: erase particular trips, clear all trips, or erase particular data from a trip (for example only its GPS location data).
-- **(Future, optional)** NFC driver recognition: tap a tag to switch driver profiles, with trips and scores kept per driver. Not sure it is worth doing.
-- **(Future)** Comfort / ride-character rating, separate from the driving and fuel scores: how comfortable or rough the ride is, and how spirited it is.
+- **(v1)** Driver ID: choose Driver 1-8 in the menu; the driver is logged with each trip. Settings are stored in car-wide and per-driver groups from the start so per-driver settings can be added later.
+- **(Future, optional)** NFC driver recognition and per-driver settings. Not sure NFC is worth doing.
+- **(Future)** Ride character: a ride mix (share of time smooth, rough, spirited) and a comfort score, separate from the driving and fuel scores.
 - **(Future)** Catalog of every piece of information the sensors can provide, to choose what goes on dashboard screens (for example heading, time, altitude). A starter list is in USAGE.md.
 - **(Future)** Computer trip viewer: route on a map colored by speed/g-force with synced charts.
 - **(Future)** Phone viewing and downloading of past trips over Bluetooth (whole or in part).

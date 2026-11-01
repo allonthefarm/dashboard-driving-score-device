@@ -25,8 +25,10 @@ _While this project is still being planned, this section doubles as a running lo
 - Bluetooth Low Energy configuration with a physical on/off switch (v2).
 - Future ideas logged: computer trip viewer (map plus synced charts), phone viewing and download over Bluetooth, OBD-II input, local Wi-Fi download, USB mass storage mode, OTA firmware updates (lowest priority).
 - Build approach decided: owner builds it with AI as tutor; sub-session workflow with SESSION_NOTES.md as shared memory.
+- 2026-11-01: Minimal driver profiles in v1: Driver 1-8 selected in the menu and logged with every trip (trip header and summary.csv). Settings structured as car-wide and per-driver groups from the start. NFC and per-driver settings remain future.
 - 2026-11-01: Future ideas logged: optional NFC driver profiles; comfort / ride-character rating (smoothness plus intensity, placing a ride as comfortable, rough or spirited). Neither is committed.
-- 2026-11-01: Scoring rework direction noted: escalating penalties by severity tier per event type (details open).
+- 2026-11-01: Scoring rework direction: severity tiers and duration per event, more events cost more, penalties not scaled by distance, a steadiness credit for calm driving, and road roughness never affects the driving score. Events cross-checked against GPS and gyro to ignore bump spikes.
+- 2026-11-01: Ride character (future): ride mix of smooth, rough and spirited time plus a comfort score, deliberately not combined into one number.
 - 2026-10-20: `.gitignore` added (PlatformIO output, Python files, OS junk, secrets) plus a privacy rule: real drive logs go in `data/private/` and are never committed.
 - 2026-10-20: Trip management menu planned for v2 or v3 (erase particular trips, clear all trips, erase particular data such as location from a trip). No erase action in v1.
 - 2026-10-20: Future task logged: build a catalog of all information available from the sensors that could go on dashboard screens (starter list in USAGE.md).

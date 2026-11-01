@@ -41,6 +41,7 @@ Not applicable while the project is solo. Work happens on `main` with small comm
 - Firmware in C++ (Arduino framework, PlatformIO). Logic that does not touch hardware goes in `firmware/lib/core/` so it can be tested on a computer.
 - Keep hardware-specific code in `firmware/src/`.
 - Scoring weights and thresholds are never hardcoded; they come from config.
+- Settings are stored in two groups from the start: car-wide and per-driver (slots for drivers 1-8). Trip records always carry a driver id.
 - Helper scripts in Python 3.
 - Short, plain comments that explain why.
 - **Privacy:** never commit real drive logs that contain GPS positions. Keep real recordings in `data/private/` (ignored by Git). Only fake or scrubbed drives go in `data/samples/`.
