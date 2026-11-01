@@ -44,7 +44,7 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - Never writes to the car's data bus (OBD-II reading only, and only in a later phase).
 - No touchscreen (not usable while driving).
 - No guarantee of exact fuel economy; real MPG comes from fill-ups, trip MPG is an estimate.
-- Not designed for multiple cars or multiple drivers in v1.
+- Not designed for multiple cars or multiple drivers in v1 (optional driver profiles are a future idea).
 
 ## Open Questions & Risks
 - **Budget.** The owner's ceiling is about **$500**; if the plan goes past that, re-evaluate. The v1 build is estimated at about $85-160 and the full build at about $100-210 (all prices approximate and unchecked), so there is plenty of room. Parts are still split into "v1" and "add later" to keep the first build simple.
@@ -58,6 +58,9 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - **Pin count.** About 26 of roughly 34 usable pins are planned. Adding much more needs an I2C expander.
 - **IMU choice.** MPU-6050 for the first prototype (cheap, well documented); ICM-42688-P or LSM6DSO is the upgrade. BNO055 has reported I2C problems on ESP32. Final pick open.
 - **Real-time clock.** Decided: include a DS3231 RTC in v1 (shares the I2C bus, no extra pins). Risk: cheap DS3231 boards sometimes try to charge a non-rechargeable CR2032 coin cell; use a quality breakout or a rechargeable LIR2032 cell, or remove the charge resistor.
+- **Scoring rework direction (not final).** The owner wants escalating penalties: more extreme events cost disproportionately more points (for example, a larger penalty at higher g). Real-world g values need checking: everyday driving is typically under about 0.3 g, hard braking about 0.4-0.6 g, and most road cars top out near 0.8-1.0 g in corners, so examples of 1.5-2 g are race-car territory. Thresholds will be set from real recorded drives. See USAGE.md Driving Score.
+- **Comfort / ride-character rating (idea).** Needs vertical vibration and jerk data the v1 log must therefore capture. Open: one rating or a two-axis position; thresholds untested; a dash-mounted sensor approximates cabin comfort, it does not equal it; a sports car on a rough road is ambiguous.
+- **NFC driver profiles (idea).** Needs an NFC reader module (about $5-12) and tags; open: what is per driver (trips, scores, settings) versus per car (calibration, fuel counters, mileage). Phone-as-tag is unreliable with common readers, so tags or keyfobs are assumed. A menu fallback is always needed.
 - **GPS module memory.** The GPS module remembers its last position on its own (it uses it for fast fixes). Decided: not cleared, unless testing on real hardware shows it is needed for the setting to work properly.
 - **Auto trip detection rules** (start on motion, end after how long stopped) are not defined yet.
 - **Mounting legality and safety.** Dash and windshield mounting rules vary by location; the menu lock while moving exists for safety, and is optional for passenger use. Owner is responsible for checking local rules.
@@ -86,6 +89,8 @@ _One line each. Full behavior is in [USAGE.md](./USAGE.md). "v1" = first usable 
 - **(v2)** Bluetooth Low Energy configuration with a physical on/off switch.
 - **(v2)** Optional small LiFePO4 battery so the unit stays on after power-off (trip summary display) and can be used on a desk.
 - **(v2 or v3)** Trip management in the menu: erase particular trips, clear all trips, or erase particular data from a trip (for example only its GPS location data).
+- **(Future, optional)** NFC driver recognition: tap a tag to switch driver profiles, with trips and scores kept per driver. Not sure it is worth doing.
+- **(Future)** Comfort / ride-character rating, separate from the driving and fuel scores: how comfortable or rough the ride is, and how spirited it is.
 - **(Future)** Catalog of every piece of information the sensors can provide, to choose what goes on dashboard screens (for example heading, time, altitude). A starter list is in USAGE.md.
 - **(Future)** Computer trip viewer: route on a map colored by speed/g-force with synced charts.
 - **(Future)** Phone viewing and downloading of past trips over Bluetooth (whole or in part).
@@ -123,6 +128,7 @@ All prices approximate and unchecked. v1 build is estimated at about $85-160; fu
 | BLE switch | Slide switch | v2 | 1 |
 | Light sensor | VEML7700 | later | 3-6 |
 | Barometer | BMP390 or BME280 | later | 3-8 |
+| NFC reader (optional) | PN532 module with NTAG cards or keyfobs | future | 5-12 |
 | CAN transceiver / ELM327 | For OBD-II | future | 5-15 |
 
 ## Getting Started
@@ -169,7 +175,7 @@ dashboard-driving-score-device/
 4. **v1.5:** 0-60 timer, fill-up tracker, fuel economy score.
 5. **v2:** Bluetooth configuration with physical switch; optional LiFePO4 backup battery.
 6. **v2 or v3:** trip management menu (erase particular trips, clear all trips, erase particular data such as location from a trip).
-7. **Future:** build the catalog of possible screen data from the sensors; phone viewing/download over Bluetooth, computer trip viewer polish, OBD-II, local Wi-Fi download, OTA firmware updates (lowest priority).
+7. **Future:** build the catalog of possible screen data from the sensors; optional NFC driver profiles; a comfort / ride-character rating; phone viewing/download over Bluetooth, computer trip viewer polish, OBD-II, local Wi-Fi download, OTA firmware updates (lowest priority).
 
 ## Contributing
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to get involved.

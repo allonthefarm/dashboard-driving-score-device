@@ -138,7 +138,7 @@ Logging runs in the background during any trip and is not a separate state. It n
 ### Files on the SD card
 | File | Contents |
 | --- | --- |
-| One trip file per trip, named by date and time, for example `2026-10-18_1349.csv` | Header with firmware version and calibration values, then rows at 10-20 Hz: timestamp, lat, lon (blank when location logging is off), GPS fix quality, speed, longitudinal g, lateral g, yaw rate, pitch, roll, event flag (OBD fields later) |
+| One trip file per trip, named by date and time, for example `2026-10-18_1349.csv` | Header with firmware version and calibration values, then rows at 10-20 Hz: timestamp, lat, lon (blank when location logging is off), GPS fix quality, speed, longitudinal g, lateral g, yaw rate, pitch, roll, vertical g (gravity removed), event flag (OBD fields later) |
 | `summary.csv`, one row per trip | Date, duration, distance, average speed, driving score, fuel economy score (v1.5), event counts, idle seconds, speed-swing energy per mile, time above efficient speed, estimated MPG (v1.5) |
 | `zero_to_sixty.csv` (v1.5), one row per run | Date and time, time to 60, peak g, GPS quality at start and end, rolling-start flag, valid/cancelled flag |
 | `fuel_fillups.csv` (v1.5), one row per fill-up | Date and time, gallons, full or partial, price per gallon (optional), odometer (optional), GPS miles since last fill-up, GPS miles since last full fill-up, tank MPG (blank until a full fill-up closes the interval), missed-fill flag, notes |
@@ -167,6 +167,7 @@ The setting "Log location to SD card" (default On) controls whether positions ar
 - Score starts at 100 per trip and loses points per event: hard braking, harsh acceleration, hard cornering, and optionally speeding.
 - The score is shown on the Trip Summary screen and written to `summary.csv`.
 - Because raw events are logged, old trips can be re-scored with new rules.
+- **Planned rework direction (not final):** escalating penalties by severity tier for each event type, so extreme events cost disproportionately more (for example a small penalty at a moderate level, much larger penalties at higher levels). An event is one continuous stretch above a threshold, scored by its peak, so one long corner is not counted hundreds of times. Tiers are separate for braking, acceleration and cornering, live in config, and are tuned with real recorded drives. Open: whether a trip's penalties are totaled as-is or scaled by distance, and whether alternate scoring profiles (for example Normal and Spirited) are wanted.
 
 ## Walkthrough: 0-60 Timer (v1.5)
 1. Arm it with the assigned Shortcut press, or from the menu. The 0-60 screen shows "Armed."
@@ -203,6 +204,22 @@ Not in v1. In v1, trips are deleted by removing the SD card and deleting files o
 3. **Clear all trips:** a confirmed action that deletes all trip files and empties `summary.csv`. 0-60 and fill-up records are kept unless the user also chooses to clear them separately.
 4. **Erase particular data from a trip:** pick a trip and a kind of data to remove, for example only the location data (lat, lon). The rest of the trip, including the score and charts, stays. The file is rewritten safely (write a new file, then replace the old one) so a power loss cannot corrupt it.
 5. Every erase asks for confirmation, and is blocked while a trip is active or the car is moving (unless passenger mode is on).
+
+## Future: Comfort / Ride-Character Rating
+A third rating, separate from the driving score and the fuel score. It describes how the ride *feels*, which is different from how well you drove. Idea: two measures, which together place the ride among three kinds:
+- **Smoothness:** how gentle the ride is. Built from abruptness of starts and stops (jerk, the rate of change of acceleration), and vertical vibration from the road (bumpiness).
+- **Intensity:** how much g-force the ride has (the same cornering, braking and acceleration data the driving score uses).
+- **Comfortable:** high smoothness, low intensity (a luxury sedan).
+- **Rough:** low smoothness, such as off-roading in a Jeep.
+- **Spirited:** high intensity but still smooth and controlled (a sports car on a curvy back road). Not comfort-seeking, but not uncomfortable either.
+Possible display: a dot on a small map with smoothness on one axis and intensity on the other, with the three zones labeled, shown in the trip summary. Open: one rating or the two-axis view; thresholds; how a dash-mounted sensor approximates cabin comfort. To keep this possible, v1 trip files already log vertical g with gravity removed.
+
+## Future: Driver Profiles (NFC, optional)
+Idea, not committed. A small NFC reader recognizes a tag or keyfob to select the driver.
+1. Tap a driver's tag on the device; the screen shows the driver's name or color and a brief confirmation.
+2. Trips are tagged with the driver in `summary.csv`, and the Trip Summary and history can show scores per driver.
+3. If no tag is tapped, the device uses the last driver or asks, and a menu fallback always lets the user pick a driver without a tag.
+4. Open: what is per driver (scores, history, shortcut settings, units) versus per car (calibration, level offset, fill-up counters and mileage).
 
 ## Future: Screen Data Catalog
 The sensors can provide more than the v1 screens show. A future task is to build a complete list of everything available from the GPS, IMU and other sensors, mark what is useful to show on a screen, and then decide new screens. Starter list (to be expanded and checked against the real hardware):
