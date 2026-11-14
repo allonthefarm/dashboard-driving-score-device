@@ -34,7 +34,7 @@ Plug the device into the car's USB power. It boots, finds GPS, and shows live dr
 ### Menu lock while moving (optional)
 - Setting "Menu lock while moving": **On** by default, with a speed threshold of **5 mph**.
 - While locked and the car is moving above the threshold, the menu cannot be opened; only View and Shortcut work.
-- **Passenger mode:** holding **Up and Down together for 3 seconds** toggles the lock off or on, even while moving. A short beep confirms each change. Setting "Passenger mode shortcut" can be turned off.
+- **Passenger mode:** a quick way to turn the lock off or on while the car is moving, for a passenger who is operating the device. **The gesture is to be decided** (see README open questions). Until then, the lock can be changed in the menu while stopped. Long presses always fire at the normal time, never on release.
 - After a power cycle the lock returns to its saved setting (On unless the user set it to stay Off).
 - Calibration is started while stopped and then runs hands-free with beeps (see below).
 
@@ -85,7 +85,7 @@ Purpose: a fallback for when auto-level reads wrong or the car sits on a slope. 
 1. Menu → Level adjust. The screen shows live pitch and roll.
 2. Three ways to set the offset:
    - **Nudge:** Up/Down change the offset in 0.1° steps (hold to repeat).
-   - **Zero here:** on ground the user knows is level, press and hold OK; the current tilt becomes zero.
+   - **Zero here:** on ground the user knows is level, press OK on this screen; the device asks "Set level here?" and OK again confirms. The current tilt becomes zero.
    - **Type values** over Bluetooth (v2).
 3. Reference tip: a phone level app should lie flat on the dash next to the device or on the car floor. A phone measures the phone, not the car.
 4. Offset is limited to ±15°. A "Reset to auto" option restores the automatic level. The manual offset overrides auto-level only when enabled.
@@ -101,23 +101,27 @@ Defaults are starting points to tune. "Buttons: No" means bulk or text entry, av
 | --- | --- | --- | --- |
 | Units (mph/km/h, gallons/liters) | mph | Yes | Yes |
 | Current driver (Driver 1 to Driver 8) | Driver 1 | Yes | Yes |
+| Driver name (optional) | None | No | Yes |
 | Logging on/off | On | Yes | Yes |
 | Log location (GPS position) to SD card | On | Yes | Yes |
 | When SD card is full | Stop | Yes | Yes |
 | Overwrite free-space threshold | 50 MB | No | Yes |
 | Log rate (Hz) | 10 | Yes | Yes |
 | Auto screen switching | On | Yes | Yes |
+| Screen pause after pressing View (s) | 10 | Yes | Yes |
 | Screen hold time (s) | 2 | Yes | Yes |
 | Brightness | 70% | Yes | Yes |
 | Hard brake threshold (g) | 0.30 | Yes | Yes |
 | Harsh acceleration threshold (g) | 0.30 | Yes | Yes |
 | Hard cornering threshold (g) | 0.35 | Yes | Yes |
 | Speed limit alert / penalty | Off | Yes | Yes |
+| Speed limit value | None | Yes | Yes |
 | Scoring weights | See Scoring | No | Yes (and config file) |
 | Level offset (pitch/roll) | Auto | Yes | Yes |
 | Run guided calibration | n/a | Yes | Yes |
 | Auto trip detect | On | Yes | Yes |
-| Fuel economy calibration (fill-up gallons, miles) | None | Yes | Yes |
+| Auto trip end delay | TBD (see README open questions) | Yes | Yes |
+| Calibrate estimated MPG from fill-up results (v1.5) | On | Yes | Yes |
 | Device name / BLE pairing code | Default | No | Yes |
 | Factory reset | n/a | Yes (confirm) | Yes |
 | Shortcut button action (short / long press) | Trip start-stop / arm 0-60 | Yes | Yes |
@@ -129,7 +133,7 @@ Defaults are starting points to tune. "Buttons: No" means bulk or text entry, av
 | Reference MPG (EPA combined) | None | Yes | Yes |
 | Ask for odometer at fill-up | Off | Yes | Yes |
 | Fuel efficiency thresholds (efficient top speed, idle grace period) | 65 mph, 30 s | Yes | Yes (and config file) |
-| Passenger mode shortcut (hold Up and Down) | On | Yes | Yes |
+| Passenger mode shortcut (gesture to be decided) | TBD | Yes | Yes |
 
 Scoring weights and thresholds can also be edited in a config file on the SD card, so tuning does not need a reflash.
 
@@ -140,7 +144,7 @@ Logging runs in the background during any trip and is not a separate state. It n
 | File | Contents |
 | --- | --- |
 | One trip file per trip, named by date and time, for example `2026-10-18_1349.csv` | Header with firmware version, calibration values and the driver number, then rows at 10-20 Hz: timestamp, lat, lon (blank when location logging is off), GPS fix quality, speed, longitudinal g, lateral g, yaw rate, pitch, roll, vertical g (gravity removed), event flag (OBD fields later) |
-| `summary.csv`, one row per trip | Date, driver, duration, distance, average speed, driving score, fuel economy score (v1.5), event counts, idle seconds, speed-swing energy per mile, time above efficient speed, estimated MPG (v1.5) |
+| `summary.csv`, one row per trip | Date, driver, duration, distance, average speed, driving score, fuel economy score (v1.5), event counts, idle seconds, speed-swing energy per mile, time above efficient speed, estimated MPG raw and calibrated (v1.5) |
 | `zero_to_sixty.csv` (v1.5), one row per run | Date and time, time to 60, peak g, GPS quality at start and end, rolling-start flag, valid/cancelled flag |
 | `fuel_fillups.csv` (v1.5), one row per fill-up | Date and time, gallons, full or partial, price per gallon (optional), odometer (optional), GPS miles since last fill-up, GPS miles since last full fill-up, tank MPG (blank until a full fill-up closes the interval), missed-fill flag, notes |
 
@@ -197,8 +201,9 @@ Works without OBD. The device counts GPS miles itself, so at the pump the user o
 A separate 0-100 score from the driving score, in two parts. All thresholds and weights are starting points in config.
 1. **Trip efficiency score.** Works on every trip. Starts at 100 and loses points for: harsh acceleration events, hard braking events, speed swings (energy added by accelerating per mile, computed as the sum of increases in v² divided by 2, per mile, from GPS speed), time above the efficient speed (default 65 mph), and idling (stopped longer than a grace period, default 30 s, while the trip is active; without OBD the device cannot tell if the engine is off).
 2. **Tank MPG score.** From the fill-up tracker. Scored against the reference MPG (EPA combined, entered once): 50 at the reference, 100 at 25% better, 0 at 25% worse. With no reference, each tank is compared to the owner's own average.
-3. **Estimated MPG per trip.** After about three full tanks, the device builds a baseline from the owner's own MPG, adjusts each trip by speed-swing and speed relative to average, then rescales so trips in a tank add up to the pump figure. Hills use barometer or GPS altitude. Labeled "estimated" on screen.
-4. **With OBD (future):** fuel rate (PID 0x5E) or mass airflow gives measured fuel per trip and replaces the estimate.
+3. **Estimated MPG per trip (works with or without the fill-up tracker).** Each trip gets an estimated MPG: a baseline MPG adjusted by that trip's speed-swing energy, speed and idling (and hills, using the barometer or GPS altitude). The baseline comes from, in order: (a) the owner's own tank results once there are about three full tanks, (b) the reference MPG (EPA combined) entered once in settings, or (c) neither, in which case only the efficiency score is shown and no MPG number. Always labeled "estimated" on screen.
+4. **Estimate versus actual.** When the owner does log fill-ups, the device compares the estimated MPG for the trips in a tank with the real tank MPG and shows how far off the estimate was (for example "estimate was 3% high"), so the owner can see how well the estimate is doing. If "Calibrate estimated MPG from fill-up results" is on, trips in a tank are also rescaled to add up to the pump figure. Both the raw estimate and the calibrated estimate are saved in `summary.csv`, so the comparison stays honest.
+5. **With OBD (future):** fuel rate (PID 0x5E) or mass airflow gives measured fuel per trip and replaces the estimate.
 
 ## Walkthrough: Bluetooth (v2)
 - Bluetooth Low Energy is built into the ESP32. A physical slide switch controls it: when off, the firmware never starts the BLE radio.
@@ -272,7 +277,7 @@ A page or small program run on the owner's computer, with the SD card data:
 - Touchscreen input.
 - Writing to the car's data bus.
 - Insurance-grade or certified scoring.
-- Multiple vehicles or driver profiles (v1).
+- Per-driver settings and multiple vehicles (v1 only records which driver drove each trip).
 - Voice assistant features.
 - Deleting trips or data from the device itself (v1; added in v2 or v3, see Trip Management).
 - Exact per-trip MPG without OBD (estimates only).

@@ -62,6 +62,8 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - **Ride character (idea).** A ride mix (smooth, rough, spirited) plus a comfort score, deliberately not merged into one number. Needs vertical vibration and jerk, so the v1 log captures vertical g. Open: thresholds (untested), how subjective comfort is handled, a dash-mounted sensor approximates cabin comfort, and a sports car on a rough road is ambiguous.
 - **Driver profiles.** v1 logs the driver number only. Open for later: what is per driver versus per car (calibration, level offset, fuel counters and mileage are per car), and NFC (reader about $5-12, tags or keyfobs; a phone as the tag is unreliable with common readers; a menu fallback is always needed).
 - **GPS module memory.** The GPS module remembers its last position on its own (it uses it for fast fixes). Decided: not cleared, unless testing on real hardware shows it is needed for the setting to work properly.
+- **Passenger-mode gesture.** The quick way to turn the menu lock off while moving is to be decided. Long presses must fire at the normal time (not on release), so the earlier idea of holding Up and Down together for 3 seconds needs a different design or a different gesture.
+- **Speaker (idea, undecided).** A small speaker for spoken notifications (for example spoken calibration steps). Open: whether it replaces the buzzer, which version, and the pin budget.
 - **Auto trip detection rules** (start on motion, end after how long stopped) are not defined yet.
 - **Mounting legality and safety.** Dash and windshield mounting rules vary by location; the menu lock while moving exists for safety, and is optional for passenger use. Owner is responsible for checking local rules.
 - **Bluetooth firmware updates (OTA)** are the hardest feature and lowest priority; needs dual flash slots and a rollback plan.
@@ -83,13 +85,14 @@ _One line each. Full behavior is in [USAGE.md](./USAGE.md). "v1" = first usable 
 - **(v1)** Supercapacitor hold-up for clean shutdown on power loss, and a real-time clock (DS3231) for correct timestamps.
 - **(v1)** Guided manual calibration (still, accelerate to ~20 mph and brake, left turn, right turn) with beeps and progress bar; saved to flash.
 - **(v1)** Auto-level (fallback) and manual level adjust (pitch/roll offset, "zero here", nudge with buttons).
+- **(v1)** Driver ID: choose Driver 1-8 in the menu; the driver is logged with each trip. Settings are stored in car-wide and per-driver groups from the start so per-driver settings can be added later.
 - **(v1.5)** 0-60 timer with its own CSV file (zero_to_sixty.csv).
 - **(v1.5)** Fill-up tracker with GPS-based mileage counters, MPG per tank, and fuel_fillups.csv.
-- **(v1.5)** Fuel economy score (trip efficiency score and tank MPG score), separate from the driving score.
+- **(v1.5)** Fuel economy score (trip efficiency score, plus a tank MPG score when fill-ups are logged), separate from the driving score.
+- **(v1.5)** Estimated MPG per trip that works with or without the fill-up tracker; when fill-ups are logged, the device compares the estimate with the real tank MPG.
 - **(v2)** Bluetooth Low Energy configuration with a physical on/off switch.
 - **(v2)** Optional small LiFePO4 battery so the unit stays on after power-off (trip summary display) and can be used on a desk.
 - **(v2 or v3)** Trip management in the menu: erase particular trips, clear all trips, or erase particular data from a trip (for example only its GPS location data).
-- **(v1)** Driver ID: choose Driver 1-8 in the menu; the driver is logged with each trip. Settings are stored in car-wide and per-driver groups from the start so per-driver settings can be added later.
 - **(Future, optional)** NFC driver recognition and per-driver settings. Not sure NFC is worth doing.
 - **(Future)** Ride character: a ride mix (share of time smooth, rough, spirited) and a comfort score, separate from the driving and fuel scores.
 - **(Future)** Catalog of every piece of information the sensors can provide, to choose what goes on dashboard screens (for example heading, time, altitude). A starter list is in USAGE.md.
@@ -135,7 +138,7 @@ All prices approximate and unchecked. v1 build is estimated at about $85-160; fu
 ## Getting Started
 
 ### Prerequisites
-- A computer (Windows, macOS or Linux) with VS Code and the PlatformIO extension. _TBD: owner's operating system._
+- The owner's computer: Windows 11, with VS Code (already installed) and the PlatformIO extension (to be added).
 - Python 3 for helper scripts.
 - Git and a GitHub account.
 - Hardware is not needed to start; see [Build Approach](#build-approach).
@@ -170,7 +173,7 @@ dashboard-driving-score-device/
 ```
 
 ## Roadmap
-1. **Now:** finish planning; set up GitHub; define SESSION_NOTES workflow.
+1. **Now:** finish planning (docs review in progress). The GitHub repo and the SESSION_NOTES workflow are set up.
 2. **No-hardware phase:** learn tools; calibration math in Python, then C++; scoring engine tested on fake and phone-recorded drives; trip state machine and button menu; screen layouts in a simulator; trip viewer.
 3. **v1 (hardware arrives):** hardware layer, live screens and animations, driving score, SD logging, guided calibration, level adjust, five-button menu, real-time clock, supercapacitor hold-up.
 4. **v1.5:** 0-60 timer, fill-up tracker, fuel economy score.
