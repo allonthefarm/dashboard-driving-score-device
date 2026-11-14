@@ -15,7 +15,8 @@ Plug the device into the car's USB power. It boots, finds GPS, and shows live dr
 - Small speaker (hardware in v1; spoken notifications arrive in v1.5), mounted away from the motion sensor.
 - SD card slot.
 - USB power input.
-- (v2) A slide switch that turns Bluetooth on or off.
+- A slide switch that turns Bluetooth on or off (installed in v1; Bluetooth itself arrives in v2).
+- A small backup battery inside the case (not user-visible; it charges from USB).
 
 ## Controls
 
@@ -63,7 +64,7 @@ Runs automatically when the device has no saved settings (the first start, or af
 3. **Auto screen switching** (if on): the device shows the g-force view during hard cornering, the brake bar during hard braking, and the Speed screen when cruising, with a hold of 2-3 seconds so it doesn't flicker.
 4. **End.** Either the user presses Shortcut again, or, if auto trip start and end is on, the trip ends after the car has been stopped for the set time (default 10 minutes, configurable), or power is cut (the car turns off).
 5. **Summary.** The Trip Summary screen shows the driving score, distance, average speed, duration, and counts of each event type. One row is added to `summary.csv`. The device returns to Idle after the user presses any button or after a timeout.
-6. **If power is cut** (car turned off), the power-loss sense input triggers a shutdown routine running on supercapacitor hold-up: end the trip, flush and close the SD file cleanly, write the summary row, and save counters and settings to flash. The screen shows the summary while the hold-up lasts. On the next boot, the last trip's score is shown briefly. (v2: with the optional battery, the unit stays on after power-off to keep showing the summary.)
+6. **If power is cut** (car turned off), the power-loss sense input triggers a shutdown routine running on the backup battery: end the trip, flush and close the SD file cleanly, write the summary row, and save counters and settings to flash. The screen then keeps showing the trip summary for the "Show trip summary after power-off" time (default 60 seconds), after which the device powers down fully and wakes again when USB power returns. If power returns during that time, the device carries on (how it treats a trip that was just ended is to be decided; see README open questions). If the battery is flat, disabled or missing, the device loses power instantly and at most about 1 second of log is lost.
 
 ## Walkthrough: Screens (v1)
 Screens (cycled with View):
@@ -141,7 +142,7 @@ Defaults are starting points to tune. "Buttons: No" means bulk or text entry, av
 | Menu lock while moving (on/off), lock speed | On, 5 mph | Yes | Yes |
 | Time zone and daylight saving | Chosen in first-time setup | Yes | Yes |
 | Auto-dim with light sensor | On (when sensor present) | Yes | Yes |
-| Show trip summary after power-off (seconds; v2, needs the optional battery) | 60 | Yes | Yes |
+| Show trip summary after power-off (seconds; uses the backup battery) | 60 | Yes | Yes |
 | Fuel tank size | None | Yes | Yes |
 | Reference MPG (EPA combined) | None | Yes | Yes |
 | Ask for odometer at fill-up | Off | Yes | Yes |
@@ -279,7 +280,7 @@ The sensors can provide more than the v1 screens show. A future task is to build
 - **From the IMU:** pitch, roll, peak g since trip start, current g, yaw rate.
 - **From the barometer (later hardware):** altitude change, air temperature, pressure trend.
 - **From trip math:** maximum speed, elapsed time, stopped time, moving average speed, best 0-60 time, estimated range (v1.5).
-- **From the power system:** supercapacitor voltage, input voltage.
+- **From the power system:** battery voltage and charge state, charging blocked by temperature, input voltage.
 
 ## Walkthrough: Computer Trip Viewer (Future)
 A page or small program run on the owner's computer, with the SD card data:
@@ -294,7 +295,10 @@ A page or small program run on the owner's computer, with the SD card data:
 - **SD card write fails mid-trip:** show an error icon; keep running; retry; never freeze the screen.
 - **Not calibrated:** status bar notice; readings use auto-level and may be rotated wrong; recommend calibrating.
 - **Calibration fails or is cancelled:** previous calibration stays.
-- **Power cut mid-trip:** the supercapacitor hold-up closes the file cleanly and saves the summary. If hold-up fails, at most about 1 second of log is lost because the log is flushed about once per second.
+- **Power cut mid-trip:** the backup battery keeps the device running long enough to close the file cleanly, save the summary and show it. If the battery is unavailable, at most about 1 second of log is lost because the log is flushed about once per second.
+- **Battery low, missing or fault:** the status bar shows a battery warning, and the device runs normally from USB power with the once-per-second flush as the safety net.
+- **Battery too hot or cold to charge:** the battery stops charging (LiFePO4 should not charge above roughly 45 °C or below 0 °C) and a status icon shows it; the device keeps running from USB power.
+- **Parked and unplugged:** after a set time the device powers down fully so the battery does not drain flat, and it wakes when USB power returns.
 - **Mount bumped:** gravity drift triggers a "recalibrate?" suggestion.
 - **Menu locked while driving:** only View and Shortcut work; passenger mode can toggle the lock.
 - **Power turned off and back on during a trip:** to be decided (see README open questions). The device can tell how long it was off from the real-time clock plus a saved shutdown time, or the last logged row if the shutdown save failed.

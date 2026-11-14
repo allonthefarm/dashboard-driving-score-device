@@ -64,7 +64,9 @@ _While this project is still being planned, this section doubles as a running lo
 - 2026-11-14: Auto trip start and end is now off by default; stop time is configurable with a default of 10 minutes. Power-off/on continuity is to be discussed.
 - 2026-11-14: Idle grace period in the fuel efficiency score raised from 30 seconds to 2 minutes (a guess, to tune) so ordinary red lights do not count as idling.
 - 2026-11-14: Android only for phone features; iPhone is not supported.
-- 2026-11-14: Supercapacitor hold-up design is under review by the owner; the README notes the concern.
+- 2026-11-14: Supercapacitor hold-up replaced by a small LiFePO4 backup battery in v1 (charger with load sharing, temperature sensor, full power-down when parked). It gives time for a clean shutdown, a trip summary after power-off, and ride-through of engine-start dips.
+- 2026-11-14: Design principle: v1 hardware includes everything v1 and v2 need, so v2 is firmware only. The Bluetooth slide switch and the backup battery move into v1 hardware; the optional v2 battery feature is removed.
+- 2026-11-14: v1 cost estimate adjusted to about $90-175; pin estimate to about 30 of roughly 34 (adds battery voltage sensing).
 
 ### Deprecated
 -

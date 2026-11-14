@@ -41,3 +41,10 @@ Entry template:
 - Docs to update: none outstanding.
 - Open questions: config file format (INI proposed), supercapacitor hold-up (owner deciding), power-off/on trip continuity, auto trip start rule, pin budget on the chosen board.
 - Next step: owner reviews this batch; then go over scoring numbers when ready, or begin the first no-hardware sub-session (PlatformIO setup).
+
+## 2026-11-14 — Backup power decision (main session)
+- Done: Replaced the supercapacitor with a v1 LiFePO4 backup battery; moved the Bluetooth switch into v1 hardware; docs updated.
+- Decisions: No hardware changes between v1 and v2 (v2 is firmware only). Battery only, no supercapacitor.
+- Docs to update: none.
+- Open questions: pick a specific LiFePO4-capable charger / load-sharing module and cell (compare two or three); whether to also add the light sensor, barometer, and reserve connections for NFC and OBD so later additions need no rebuild; power-off/on trip continuity.
+- Next step: owner answers the "reserve hardware for later features" question.
