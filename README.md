@@ -45,6 +45,7 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - No touchscreen (not usable while driving).
 - No guarantee of exact fuel economy; real MPG comes from fill-ups, trip MPG is an estimate.
 - Not designed for multiple cars in v1. Drivers: v1 only logs which driver drove each trip; per-driver settings and NFC recognition are later.
+- No iPhone support. Phone features target Android only.
 
 ## Open Questions & Risks
 - **Budget.** The owner's ceiling is about **$500**; if the plan goes past that, re-evaluate. The v1 build is estimated at about $90-170 and the full build at about $105-220 (all prices approximate and unchecked), so there is plenty of room. Parts are still split into "v1" and "add later" to keep the first build simple.
@@ -64,7 +65,10 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - **GPS module memory.** The GPS module remembers its last position on its own (it uses it for fast fixes). Decided: not cleared, unless testing on real hardware shows it is needed for the setting to work properly.
 - **Passenger-mode gesture.** The quick way to turn the menu lock off while moving is to be decided. Long presses must fire at the normal time (not on release), so the earlier idea of holding Up and Down together for 3 seconds needs a different design or a different gesture.
 - **Speaker.** Decided: speaker hardware is in v1 (audio amplifier chip and small speaker) alongside the buzzer, which stays for beeps and character; voice clips and spoken notifications are v1.5; speaker settings are to be determined. Risks: it adds about 3 pins to a tight pin budget, and sound vibration can disturb the motion sensor, so the speaker must be mounted away from the IMU and the case designed to isolate it.
-- **Auto trip detection rules** (start on motion, end after how long stopped) are not defined yet.
+- **Auto trip start and end.** Decided: off by default; trips start and end with the Shortcut button. When turned on, a trip ends after a configurable stop time (default 10 minutes). Open: the start rule (speed threshold), and what happens when power is lost and returns. The device can tell how long it was off from the real-time clock plus a saved shutdown time (or the last logged row if the shutdown save failed), so a power-off shorter than the stop time could continue the same trip. The owner will discuss this before it is designed.
+- **Supercapacitor hold-up design (owner is still deciding).** Concern: a 1 F supercapacitor holds only a few seconds at 5 V, so saving data must come first (turn off the backlight and GPS) and the trip summary may be better shown on the next boot than during hold-up. USAGE currently describes the earlier plan and may change.
+- **Config file format (proposed).** INI style (`config.ini`). Alternatives: JSON (very standard, but no comments and one typo breaks the file) or TOML (modern, but heavier on a small device). To be confirmed by the owner.
+- **Heat and sun.** A parked dashboard can pass 60 °C, which affects the screen, SD card, supercapacitor and the clock's coin cell, and sunlight can wash out the display. Check temperature ratings and pick a bright screen before buying.
 - **Mounting legality and safety.** Dash and windshield mounting rules vary by location; the menu lock while moving exists for safety, and is optional for passenger use. Owner is responsible for checking local rules.
 - **Bluetooth firmware updates (OTA)** are the hardest feature and lowest priority; needs dual flash slots and a rollback plan.
 - **Sub-session reporting** relies on SESSION_NOTES.md in the repo; no live session-to-session messaging.
@@ -74,19 +78,22 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 ## Features
 _One line each. Full behavior is in [USAGE.md](./USAGE.md). "v1" = first usable version._
 - **(v1)** Live tracking: acceleration, braking, turning force, speed, average speed, trip distance, tilt angle.
-- **(v1)** Trip driving score at trip end (starts at 100, loses points per event; placeholder formula).
-- **(v1)** Manual trip start/stop button, with auto trip detection as a fallback.
+- **(v1)** Trip driving score at trip end (starts at 100; each event costs points by severity tier and duration, and more events cost more; placeholder numbers).
+- **(v1)** Manual trip start/stop button, with optional auto trip start and end (off by default; stop time configurable, default 10 minutes).
 - **(v1)** Multiple screens with animations driven by sensor input (g-ball, brake/accel bar, tilt indicator) and automatic screen switching.
 - **(v1)** Five buttons: Up, Down, OK, Shortcut (assignable), View (switch screens).
 - **(v1)** Button-driven settings menu; nearly every setting changeable on the device.
 - **(v1)** Optional menu lock while moving, with a passenger-mode toggle.
-- **(v1)** SD card logging to CSV: one trip file per trip plus summary.csv; settings to turn logging on/off and choose overwrite-oldest or stop when full.
+- **(v1)** SD card logging to CSV: one trip file per trip, summary.csv and events.csv; each row summarizes its interval at full sensor rate; settings to turn logging on/off and choose overwrite-oldest or stop when full.
+- **(v1)** Config file on the SD card (config.ini) for bulk settings such as scoring weights and tiers, plus an "Export settings to SD" action.
 - **(v1)** Setting to turn off location logging: GPS still powers speed, distance and scoring, but position is never saved.
 - **(v1)** Supercapacitor hold-up for clean shutdown on power loss, and a real-time clock (DS3231) for correct timestamps.
 - **(v1)** Guided manual calibration (still, accelerate to ~20 mph and brake, left turn, right turn) with beeps and progress bar; saved to flash.
 - **(v1)** Auto-level (fallback) and manual level adjust (pitch/roll offset, "zero here", nudge with buttons).
 - **(v1)** Driver ID: choose Driver 1-8 in the menu; the driver is logged with each trip. Settings are stored in car-wide and per-driver groups from the start so per-driver settings can be added later.
 - **(v1)** Speaker hardware (audio amplifier chip and small speaker) installed and wired alongside the buzzer; the firmware is designed to support it, with no voice features yet.
+- **(v1)** First-time setup on first start: units, time zone and daylight saving, clock, driver, and an offer to calibrate.
+- **(After v1)** Steadiness credit in the driving score: credit for the share of moving time driven calmly.
 - **(v1.5)** 0-60 timer with its own CSV file (zero_to_sixty.csv).
 - **(v1.5)** Fill-up tracker with GPS-based mileage counters, MPG per tank, and fuel_fillups.csv.
 - **(v1.5)** Fuel economy score (trip efficiency score, plus a tank MPG score when fill-ups are logged), separate from the driving score.
@@ -138,6 +145,22 @@ All prices approximate and unchecked. v1 build is estimated at about $90-170; fu
 | NFC reader (optional) | PN532 module with NTAG cards or keyfobs | future | 5-12 |
 | CAN transceiver / ELM327 | For OBD-II | future | 5-15 |
 
+### Shopping list notes (read before buying)
+- **Pins:** check the exact board's pinout first. The 8 MB PSRAM variant (octal) probably uses extra pins, so the usable pins are likely fewer than the roughly 34 assumed. Consider a board without octal PSRAM, or confirm every needed pin stays free: display, SD card, 5 buttons, speaker audio chip, buzzer, power-loss sense, GPS.
+- **Heat and sun:** check the operating temperature ratings of the screen, SD card, supercapacitor and the real-time clock's coin cell (a parked dash can pass 60 °C), and prefer a bright IPS screen that is readable in sunlight.
+- **Real-time clock:** buy a quality DS3231 board, or use a rechargeable LIR2032 cell, because cheap boards can try to charge a non-rechargeable coin cell.
+- **Speaker:** mount it away from the motion sensor.
+- **Backup battery (v2):** LiFePO4 only, never LiPo.
+- **USB cable:** get one that carries data, not a charge-only cable, for programming the board.
+
+### Tools and prototyping supplies
+| Item | Status |
+| --- | --- |
+| Multimeter, soldering iron and solder, wire cutters, wire strippers | Already owned |
+| 3D printer and filament (for the case and mount) | Already owned |
+| Breadboard | Need to buy (about $5-10, approximate) |
+| Jumper wires | Check what is on hand; buy a kit if needed (about $5-10, approximate) |
+
 ## Getting Started
 
 ### Prerequisites
@@ -179,10 +202,11 @@ dashboard-driving-score-device/
 1. **Now:** finish planning (docs review in progress). The GitHub repo and the SESSION_NOTES workflow are set up.
 2. **No-hardware phase:** learn tools; calibration math in Python, then C++; scoring engine tested on fake and phone-recorded drives; trip state machine and button menu; screen layouts in a simulator; trip viewer.
 3. **v1 (hardware arrives):** hardware layer, live screens and animations, driving score, SD logging, guided calibration, level adjust, five-button menu, real-time clock, supercapacitor hold-up, speaker hardware wired.
-4. **v1.5:** 0-60 timer, fill-up tracker, fuel economy score, voice clips and spoken notifications.
-5. **v2:** Bluetooth configuration with physical switch; optional LiFePO4 backup battery.
-6. **v2 or v3:** trip management menu (erase particular trips, clear all trips, erase particular data such as location from a trip).
-7. **Future:** build the catalog of possible screen data from the sensors; optional NFC driver profiles; a comfort / ride-character rating; phone viewing/download over Bluetooth, computer trip viewer polish, OBD-II, local Wi-Fi download, OTA firmware updates (lowest priority).
+4. **v1 accuracy check (once the hardware works):** compare the device side by side with a phone sensor app (g-forces and tilt) and with the car's speedometer and a phone's GPS speed; record the differences; adjust calibration, filtering and thresholds until the readings can be trusted.
+5. **v1.5:** 0-60 timer, fill-up tracker, fuel economy score, voice clips and spoken notifications.
+6. **v2:** Bluetooth configuration with physical switch; optional LiFePO4 backup battery.
+7. **v2 or v3:** trip management menu (erase particular trips, clear all trips, erase particular data such as location from a trip).
+8. **Future:** build the catalog of possible screen data from the sensors; optional NFC driver profiles; a comfort / ride-character rating; phone viewing/download over Bluetooth, computer trip viewer polish, OBD-II, local Wi-Fi download, OTA firmware updates (lowest priority).
 
 ## Contributing
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to get involved.

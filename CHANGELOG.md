@@ -36,6 +36,13 @@ _While this project is still being planned, this section doubles as a running lo
 - 2026-11-14: Estimated MPG per trip works with or without the fill-up tracker (baseline from the owner's reference MPG, or from their own tanks when available). When fill-ups exist, the raw estimate is compared with real tank MPG, and both raw and calibrated estimates are saved.
 - 2026-11-14: Settings table gains auto trip end delay (default to be decided), screen pause after View, speed limit value, and an optional driver name.
 - 2026-11-14: Speaker hardware in v1 (audio amplifier chip and small speaker) alongside the buzzer, which stays for beeps and character. Voice clips and spoken notifications are v1.5; speaker settings to be determined.
+- 2026-11-14: Trip file rows now summarize each interval at full sensor rate (average and peak g, vertical vibration level, maximum jerk), so road vibration and short events are not missed at 10 Hz.
+- 2026-11-14: New `events.csv` (one row per event with type, peak, duration, and whether GPS or gyro confirmed it), so tiered scoring and re-scoring have the data they need.
+- 2026-11-14: Fuel-score inputs (idle seconds, speed-swing energy per mile, time above efficient speed) are logged from v1, ahead of the v1.5 fuel score.
+- 2026-11-14: Config file on the SD card (`config.ini`, INI style proposed): read at boot, SD values override saved settings only when the file has changed, bad lines ignored with a notice, "Export settings to SD" action, and a format version number at the start of every CSV and the config file.
+- 2026-11-14: First-time setup on first start (units, time zone and daylight saving, clock, driver, optional calibration), and time zone and daylight saving added to settings. Row timestamps are UTC; file names and screens use local time.
+- 2026-11-14: Roadmap step added: v1 accuracy check against a phone sensor app, the speedometer and phone GPS.
+- 2026-11-14: README gains shopping list notes (pin check, heat and sun, clock cell, speaker placement, LiFePO4 only, data USB cable) and a tools list (breadboard to buy; jumper wires to check).
 
 ### Changed
 - Microcontroller upgraded in plan from ESP32 to ESP32-S3 (16 MB flash, 8 MB PSRAM) for headroom.
@@ -53,6 +60,11 @@ _While this project is still being planned, this section doubles as a running lo
 - 2026-11-14: Replaced the stale "Fuel economy calibration" setting with "Calibrate estimated MPG from fill-up results"; the estimate stays independent of the fill-up tracker.
 - 2026-11-14: Docs cleanup: Out of Scope reworded for the v1 driver ID; README prerequisites and roadmap brought up to date; features and changelog put in order.
 - 2026-11-14: v1 cost estimate raised to about $90-170 (full build about $105-220) to include the speaker; pin estimate raised by about 3.
+- 2026-11-14: v1 scoring scope: tiered events plus event count (no steadiness credit until after v1 works).
+- 2026-11-14: Auto trip start and end is now off by default; stop time is configurable with a default of 10 minutes. Power-off/on continuity is to be discussed.
+- 2026-11-14: Idle grace period in the fuel efficiency score raised from 30 seconds to 2 minutes (a guess, to tune) so ordinary red lights do not count as idling.
+- 2026-11-14: Android only for phone features; iPhone is not supported.
+- 2026-11-14: Supercapacitor hold-up design is under review by the owner; the README notes the concern.
 
 ### Deprecated
 -

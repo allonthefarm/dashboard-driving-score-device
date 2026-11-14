@@ -34,3 +34,10 @@ Entry template:
 - Docs to update: none.
 - Open questions: pin budget now about 29 of roughly 34 (review item 15 still open).
 - Next step: continue with the rest of the docs review list (items 7-20).
+
+## 2026-11-14 — Docs review, second batch (main session)
+- Done: Applied review items 7-13 and 15-20 (item 14 left open by the owner). Added events.csv, interval-summarized log rows, config.ini plan, first-time setup, time zone and daylight saving, auto trip defaults, v1 scoring scope, fuel inputs logged in v1, shopping list notes, tools list, accuracy-check roadmap step.
+- Decisions: Auto trip start and end off by default (stop time default 10 minutes). Android only. Owner already has multimeter, soldering iron, 3D printer, cutters and strippers; needs a breadboard and maybe jumper wires.
+- Docs to update: none outstanding.
+- Open questions: config file format (INI proposed), supercapacitor hold-up (owner deciding), power-off/on trip continuity, auto trip start rule, pin budget on the chosen board.
+- Next step: owner reviews this batch; then go over scoring numbers when ready, or begin the first no-hardware sub-session (PlatformIO setup).

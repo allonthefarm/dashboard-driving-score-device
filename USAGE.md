@@ -42,16 +42,26 @@ Plug the device into the car's USB power. It boots, finds GPS, and shows live dr
 ## Walkthrough: Powering On (v1)
 1. The car supplies USB power. The device boots and shows a short splash screen with the firmware version.
 2. It checks the SD card. A small status icon shows card OK, card missing, or card full.
-3. It loads saved settings and calibration from internal flash. If no calibration exists, a "Not calibrated" notice shows on the status bar and the device uses auto-level only.
+3. It loads saved settings and calibration from internal flash. If there are no saved settings (first start, or after a factory reset), First-Time Setup runs first (next section). If no calibration exists, a "Not calibrated" notice shows on the status bar and the device uses auto-level only.
 4. It searches for GPS. The status bar shows the GPS state (searching, fix, number of satellites optional). Speed, distance and average speed show "--" until there is a fix.
 5. The device enters **Idle** and shows the live screens.
-6. Clock: the real-time clock (DS3231) supplies the time immediately at boot, so files get correct timestamps before GPS locks. GPS time corrects the RTC whenever a fix is available. Time zone is chosen at first boot. If the RTC lost power (dead coin cell), the device shows "Clock not set" until GPS gives the time.
+6. Clock: the real-time clock (DS3231) supplies the time immediately at boot, so files get correct timestamps before GPS locks. GPS time corrects the RTC whenever a fix is available. Time zone and daylight saving are chosen in First-Time Setup and can be changed in settings. If the RTC lost power (dead coin cell), the device shows "Clock not set" until GPS gives the time.
+
+## Walkthrough: First-Time Setup (v1)
+Runs automatically when the device has no saved settings (the first start, or after a factory reset), and can be run again from the menu ("Run first-time setup again"). Every step has a sensible default and can be skipped and changed later in settings. It is meant to be done while parked.
+1. **Welcome:** a short intro and the firmware version.
+2. **Units:** mph or km/h, gallons or liters (default mph and gallons).
+3. **Time zone and daylight saving:** pick from a list of United States time zones, or enter a manual offset from UTC for anywhere else. Daylight saving is handled automatically for the chosen zone from a rule table built into the device (it has no internet to look the rules up), with a "no daylight saving" option. GPS and the real-time clock keep time in UTC; the device converts to local time for the screen and file names. Changeable later in settings.
+4. **Clock:** shows the time the device thinks it is (from GPS or the clock module). If neither has it yet, set it by hand with Up and Down; GPS corrects it later.
+5. **Driver:** choose Driver 1 to 8 (default Driver 1).
+6. **Calibration:** "Calibrate now?" Yes starts guided calibration (needs an empty lot); Later skips it, and the status bar shows the "Not calibrated" notice until it is done.
+7. **Done:** the device goes to Idle.
 
 ## Walkthrough: A Normal Trip (v1)
-1. **Start.** Either the user presses Shortcut (default action), or the device auto-detects a trip when speed rises above a threshold (auto detect can be turned off). The screen shows "Trip started" briefly. A new trip file is created on the SD card, named by date and time, for example `2026-10-18_1349.csv`.
+1. **Start.** Either the user presses Shortcut (default action), or, if auto trip start and end is turned on (it is off by default), the device starts a trip when speed rises above a threshold. The screen shows "Trip started" briefly. A new trip file is created on the SD card, named by date and time, for example `2026-10-18_1349.csv`.
 2. **During the trip.** The live screens update. Speed, average speed, trip distance and trip timer show on the Speed screen. The g-ball moves with lateral and longitudinal g. The brake/accel bar fills with force. Events (hard brake, harsh acceleration, hard cornering) are detected, flagged in the log, and cost points.
 3. **Auto screen switching** (if on): the device shows the g-force view during hard cornering, the brake bar during hard braking, and the Speed screen when cruising, with a hold of 2-3 seconds so it doesn't flicker.
-4. **End.** Either the user presses Shortcut again, or auto detect ends the trip after the car has been stopped for a set time (default to be decided; see README open questions), or power is cut (the car turns off).
+4. **End.** Either the user presses Shortcut again, or, if auto trip start and end is on, the trip ends after the car has been stopped for the set time (default 10 minutes, configurable), or power is cut (the car turns off).
 5. **Summary.** The Trip Summary screen shows the driving score, distance, average speed, duration, and counts of each event type. One row is added to `summary.csv`. The device returns to Idle after the user presses any button or after a timeout.
 6. **If power is cut** (car turned off), the power-loss sense input triggers a shutdown routine running on supercapacitor hold-up: end the trip, flush and close the SD file cleanly, write the summary row, and save counters and settings to flash. The screen shows the summary while the hold-up lasts. On the next boot, the last trip's score is shown briefly. (v2: with the optional battery, the unit stays on after power-off to keep showing the summary.)
 
@@ -120,24 +130,33 @@ Defaults are starting points to tune. "Buttons: No" means bulk or text entry, av
 | Scoring weights | See Scoring | No | Yes (and config file) |
 | Level offset (pitch/roll) | Auto | Yes | Yes |
 | Run guided calibration | n/a | Yes | Yes |
-| Auto trip detect | On | Yes | Yes |
-| Auto trip end delay | TBD (see README open questions) | Yes | Yes |
+| Auto trip start and end | Off | Yes | Yes |
+| Auto trip end delay (minutes stopped) | 10 | Yes | Yes |
 | Calibrate estimated MPG from fill-up results (v1.5) | On | Yes | Yes |
 | Device name / BLE pairing code | Default | No | Yes |
 | Factory reset | n/a | Yes (confirm) | Yes |
+| Run first-time setup again | n/a | Yes | Yes |
+| Export settings to SD (config.ini) | n/a | Yes | No |
 | Shortcut button action (short / long press) | Trip start-stop / arm 0-60 | Yes | Yes |
 | Menu lock while moving (on/off), lock speed | On, 5 mph | Yes | Yes |
-| Time zone and daylight saving | Ask at first boot | Yes | Yes |
+| Time zone and daylight saving | Chosen in first-time setup | Yes | Yes |
 | Auto-dim with light sensor | On (when sensor present) | Yes | Yes |
 | Show trip summary after power-off (seconds; v2, needs the optional battery) | 60 | Yes | Yes |
 | Fuel tank size | None | Yes | Yes |
 | Reference MPG (EPA combined) | None | Yes | Yes |
 | Ask for odometer at fill-up | Off | Yes | Yes |
-| Fuel efficiency thresholds (efficient top speed, idle grace period) | 65 mph, 30 s | Yes | Yes (and config file) |
+| Fuel efficiency thresholds (efficient top speed, idle grace period) | 65 mph, 2 min | Yes | Yes (and config file) |
 | Passenger mode shortcut (gesture to be decided) | TBD | Yes | Yes |
 | Speaker and voice notification settings (v1.5) | TBD | TBD | TBD |
 
-Scoring weights and thresholds can also be edited in a config file on the SD card, so tuning does not need a reflash.
+### Config file on the SD card (v1)
+Scoring weights, severity tiers and other bulk values are tedious on buttons, so any setting can also be set from a text file on the SD card. Tuning then needs no reflash.
+- **File and format:** `config.ini` in the top folder of the SD card. Proposed format, to be confirmed: INI style. It is plain text with `[section]` headings, `key = value` lines, and `#` comments, so it is easy to edit in Notepad.
+- **When it is read:** at boot, if the file exists. For each key present, the value in the file overrides the saved setting; keys that are missing are left alone. Applied values are saved in the device, so removing the file later does not undo them.
+- **Not re-applied every boot:** the device remembers a checksum of the file it last applied and applies it again only when the file has changed, so settings changed later on the device are not undone at each start.
+- **Writing it:** the menu action "Export settings to SD" writes a complete `config.ini` with every setting, its current value and a comment explaining it, which makes a good starting point to edit.
+- **Mistakes:** a bad key or value is ignored and the old value is kept. The device shows a "Config problem" notice and a "Config notes" screen listing the lines it ignored.
+- **Version:** the file has a `config_version` key so later firmware can still read old files.
 
 ## Walkthrough: Data Logging (v1)
 Logging runs in the background during any trip and is not a separate state. It never blocks sensing or animation (SD writes go through a RAM queue on the second core).
@@ -145,17 +164,20 @@ Logging runs in the background during any trip and is not a separate state. It n
 ### Files on the SD card
 | File | Contents |
 | --- | --- |
-| One trip file per trip, named by date and time, for example `2026-10-18_1349.csv` | Header with firmware version, calibration values and the driver number, then rows at 10-20 Hz: timestamp, lat, lon (blank when location logging is off), GPS fix quality, speed, longitudinal g, lateral g, yaw rate, pitch, roll, vertical g (gravity removed), event flag (OBD fields later) |
-| `summary.csv`, one row per trip | Date, driver, duration, distance, average speed, driving score, fuel economy score (v1.5), event counts, idle seconds, speed-swing energy per mile, time above efficient speed, estimated MPG raw and calibrated (v1.5) |
+| One trip file per trip, named by date and time, for example `2026-10-18_1349.csv` | Header lines (starting with `#`) with the file format version, firmware version, calibration values and the driver number, then rows at 10-20 Hz. Each row summarizes its whole interval at the full sensor rate: timestamp (UTC), lat, lon (blank when location logging is off), GPS fix quality, speed, longitudinal g average and peak, lateral g average and peak, yaw rate, pitch, roll, vertical vibration level (RMS, gravity removed), vertical peak, maximum jerk, event flag (OBD fields later). A "peak" is the largest value in the interval, keeping its sign |
+| `summary.csv`, one row per trip | Date, driver, duration, distance, average speed, driving score, fuel economy score (v1.5), event counts, fuel inputs logged from v1 so history builds up before the v1.5 fuel score (idle seconds, speed-swing energy per mile, time above efficient speed), estimated MPG raw and calibrated (v1.5) |
+| `events.csv`, one row per event | Trip file name, driver, start time (UTC), duration (s), type (hard braking, harsh acceleration, hard cornering, speeding), peak value (g, or speed for speeding), speed at the peak, confirmed by GPS or gyro (yes/no, so bump spikes are recorded but flagged), lat and lon (blank when location logging is off) |
 | `zero_to_sixty.csv` (v1.5), one row per run | Date and time, time to 60, peak g, GPS quality at start and end, rolling-start flag, valid/cancelled flag |
 | `fuel_fillups.csv` (v1.5), one row per fill-up | Date and time, gallons, full or partial, price per gallon (optional), odometer (optional), GPS miles since last fill-up, GPS miles since last full fill-up, tank MPG (blank until a full fill-up closes the interval), missed-fill flag, notes |
 
-Raw events are kept so old trips can be re-scored under new rules. Cancelled and invalid 0-60 runs are logged with a flag.
+Because every row keeps the peaks and every event is recorded with its peak and duration, old trips can be re-scored under new rules. Cancelled and invalid 0-60 runs are logged with a flag. Every CSV file starts with a first line beginning with `#` that holds the file format version (for example `#format=1`); spreadsheet programs show it as an ordinary first row and Python's CSV tools can skip it, so a later viewer can read older files. Row timestamps are UTC so daylight-saving changes never confuse the data; file names and on-screen times use local time.
+
+The sensors and event detection always run at full speed on the device. The log rate setting only controls how often a row is written.
 
 ### Storage behavior
 - **Logging on/off** is a setting. When off, the SD card is not touched.
 - **When full:** Stop (show a "card full" icon) or Overwrite (delete the oldest whole trip files until there is room; never delete part of a file). Overwrite starts when free space drops below the threshold (default 50 MB), not at zero.
-- Format: FAT32; use a quality 8-32 GB card. A 15-column CSV at 10 Hz is about 1.5-3 MB per hour.
+- Format: FAT32; use a quality 8-32 GB card. A trip file with about 18 columns at 10 Hz is roughly 3-6 MB per hour (an estimate to check against real files), so even a small card holds a very long time.
 - **If the SD card is missing:** the device still works and shows a "no card" icon. (v1.5: the last several fill-ups are kept in internal flash and copied to the card later.)
 - Writes are buffered in RAM and flushed about once per second.
 
@@ -171,10 +193,10 @@ The setting "Log location to SD card" (default On) controls whether positions ar
 
 ## Walkthrough: Driving Score (v1)
 **Status: placeholder.** The owner will rework scoring later; weights and thresholds must live in config (flash and the SD config file), never hardcoded.
-- Score starts at 100 per trip and loses points per event: hard braking, harsh acceleration, hard cornering, and optionally speeding.
+- **v1 scope:** the score starts at 100 per trip; each event (hard braking, harsh acceleration, hard cornering, and optionally speeding) costs points by severity tier and duration, and more events cost more, as described below. The steadiness credit is added after v1 works. All numbers are placeholders.
 - The score is shown on the Trip Summary screen and written to `summary.csv`.
 - Because raw events are logged, old trips can be re-scored with new rules.
-- **Planned rework direction (not final):**
+- **Planned rework direction (not final).** For v1 the score uses everything below except the steadiness credit:
   - Each event (one continuous stretch above a threshold) is penalized by the severity tier of its peak and by its duration. Longer costs more, but growth slows with duration so one very long corner cannot wipe out the score.
   - The number of events matters. Penalties add up and may escalate as the count rises, so one swerve to avoid a dog costs little while 35 hard corners cost a lot.
   - Penalties are not divided by trip distance. A short aggressive stretch on an otherwise calm trip still counts.
@@ -201,7 +223,7 @@ Works without OBD. The device counts GPS miles itself, so at the pump the user o
 
 ## Walkthrough: Fuel Economy Score (v1.5)
 A separate 0-100 score from the driving score, in two parts. All thresholds and weights are starting points in config.
-1. **Trip efficiency score.** Works on every trip. Starts at 100 and loses points for: harsh acceleration events, hard braking events, speed swings (energy added by accelerating per mile, computed as the sum of increases in v² divided by 2, per mile, from GPS speed), time above the efficient speed (default 65 mph), and idling (stopped longer than a grace period, default 30 s, while the trip is active; without OBD the device cannot tell if the engine is off).
+1. **Trip efficiency score.** Works on every trip. Starts at 100 and loses points for: harsh acceleration events, hard braking events, speed swings (energy added by accelerating per mile, computed as the sum of increases in v² divided by 2, per mile, from GPS speed), time above the efficient speed (default 65 mph), and idling (stopped longer than a grace period, default 2 minutes so ordinary red lights do not count, while the trip is active; without OBD the device cannot tell if the engine is off).
 2. **Tank MPG score.** From the fill-up tracker. Scored against the reference MPG (EPA combined, entered once): 50 at the reference, 100 at 25% better, 0 at 25% worse. With no reference, each tank is compared to the owner's own average.
 3. **Estimated MPG per trip (works with or without the fill-up tracker).** Each trip gets an estimated MPG: a baseline MPG adjusted by that trip's speed-swing energy, speed and idling (and hills, using the barometer or GPS altitude). The baseline comes from, in order: (a) the owner's own tank results once there are about three full tanks, (b) the reference MPG (EPA combined) entered once in settings, or (c) neither, in which case only the efficiency score is shown and no MPG number. Always labeled "estimated" on screen.
 4. **Estimate versus actual.** When the owner does log fill-ups, the device compares the estimated MPG for the trips in a tank with the real tank MPG and shows how far off the estimate was (for example "estimate was 3% high"), so the owner can see how well the estimate is doing. If "Calibrate estimated MPG from fill-up results" is on, trips in a tank are also rescaled to add up to the pump figure. Both the raw estimate and the calibrated estimate are saved in `summary.csv`, so the comparison stays honest.
@@ -216,7 +238,7 @@ A separate 0-100 score from the driving score, in two parts. All thresholds and 
 
 ## Walkthrough: Bluetooth (v2)
 - Bluetooth Low Energy is built into the ESP32. A physical slide switch controls it: when off, the firmware never starts the BLE radio.
-- Over Bluetooth the user can change any setting (same list as the buttons), enter level offsets, start calibration, and edit scoring weights, using a generic phone app first (for example nRF Connect) and a simple web-bluetooth page later.
+- Over Bluetooth the user can change any setting (same list as the buttons), enter level offsets, start calibration, and edit scoring weights, from an Android phone: a generic app first (for example nRF Connect) and a simple Web Bluetooth page in Chrome later. iPhone is not supported.
 - **Future:** view past trips on the phone; download whole trips or parts of trips; update firmware over Bluetooth (lowest priority, needs dual flash slots and rollback; until then, update by USB).
 
 ## Walkthrough: Trip Management (v2 or v3)
@@ -275,6 +297,7 @@ A page or small program run on the owner's computer, with the SD card data:
 - **Power cut mid-trip:** the supercapacitor hold-up closes the file cleanly and saves the summary. If hold-up fails, at most about 1 second of log is lost because the log is flushed about once per second.
 - **Mount bumped:** gravity drift triggers a "recalibrate?" suggestion.
 - **Menu locked while driving:** only View and Shortcut work; passenger mode can toggle the lock.
+- **Power turned off and back on during a trip:** to be decided (see README open questions). The device can tell how long it was off from the real-time clock plus a saved shutdown time, or the last logged row if the shutdown save failed.
 - **Time unknown:** if the RTC lost power and GPS has no fix yet, files are named by a boot counter until time is known, then renamed or flagged.
 - **Corrupt or missing settings:** fall back to defaults and say so; factory reset available in the menu.
 - **Driver changed during a trip:** not allowed; the driver is locked while a trip is active and can be changed once it ends.
