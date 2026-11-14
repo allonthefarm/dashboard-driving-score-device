@@ -11,7 +11,8 @@ Plug the device into the car's USB power. It boots, finds GPS, and shows live dr
 ## Hardware Summary (what the user sees and touches)
 - Color screen, 2.8"-3.5", no touch.
 - Five buttons: **Up, Down, OK, Shortcut, View**.
-- Buzzer for beeps.
+- Buzzer for beeps (kept for character).
+- Small speaker (hardware in v1; spoken notifications arrive in v1.5), mounted away from the motion sensor.
 - SD card slot.
 - USB power input.
 - (v2) A slide switch that turns Bluetooth on or off.
@@ -134,6 +135,7 @@ Defaults are starting points to tune. "Buttons: No" means bulk or text entry, av
 | Ask for odometer at fill-up | Off | Yes | Yes |
 | Fuel efficiency thresholds (efficient top speed, idle grace period) | 65 mph, 30 s | Yes | Yes (and config file) |
 | Passenger mode shortcut (gesture to be decided) | TBD | Yes | Yes |
+| Speaker and voice notification settings (v1.5) | TBD | TBD | TBD |
 
 Scoring weights and thresholds can also be edited in a config file on the SD card, so tuning does not need a reflash.
 
@@ -204,6 +206,13 @@ A separate 0-100 score from the driving score, in two parts. All thresholds and 
 3. **Estimated MPG per trip (works with or without the fill-up tracker).** Each trip gets an estimated MPG: a baseline MPG adjusted by that trip's speed-swing energy, speed and idling (and hills, using the barometer or GPS altitude). The baseline comes from, in order: (a) the owner's own tank results once there are about three full tanks, (b) the reference MPG (EPA combined) entered once in settings, or (c) neither, in which case only the efficiency score is shown and no MPG number. Always labeled "estimated" on screen.
 4. **Estimate versus actual.** When the owner does log fill-ups, the device compares the estimated MPG for the trips in a tank with the real tank MPG and shows how far off the estimate was (for example "estimate was 3% high"), so the owner can see how well the estimate is doing. If "Calibrate estimated MPG from fill-up results" is on, trips in a tank are also rescaled to add up to the pump figure. Both the raw estimate and the calibrated estimate are saved in `summary.csv`, so the comparison stays honest.
 5. **With OBD (future):** fuel rate (PID 0x5E) or mass airflow gives measured fuel per trip and replaces the estimate.
+
+## Walkthrough: Spoken Notifications (v1.5)
+- **v1:** the speaker and its audio chip are installed and wired, and the firmware has an audio layer that can play sounds, but there are no voice features. Beeps come from the buzzer, and prompts show on screen.
+- **v1.5:** pre-recorded voice clips, stored on the SD card or in internal flash, play through the speaker. The clips are recorded once on a computer, for example with any text-to-speech tool (phrases such as "Hard brake" or "Accelerate to 20 miles per hour"). The first use is spoken guided-calibration steps, so nobody needs to look at the screen.
+- The buzzer stays for beeps and character; the speaker handles voice.
+- **Settings (volume, which notifications speak, quiet mode, speaker versus buzzer per notification): to be determined.**
+- The speaker is mounted away from the IMU, and the case isolates it, because sound vibration can disturb the motion sensor.
 
 ## Walkthrough: Bluetooth (v2)
 - Bluetooth Low Energy is built into the ESP32. A physical slide switch controls it: when off, the firmware never starts the BLE radio.

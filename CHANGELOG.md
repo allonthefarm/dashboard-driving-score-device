@@ -35,6 +35,7 @@ _While this project is still being planned, this section doubles as a running lo
 - 2026-11-01: Ride character (future): ride mix of smooth, rough and spirited time plus a comfort score, deliberately not combined into one number.
 - 2026-11-14: Estimated MPG per trip works with or without the fill-up tracker (baseline from the owner's reference MPG, or from their own tanks when available). When fill-ups exist, the raw estimate is compared with real tank MPG, and both raw and calibrated estimates are saved.
 - 2026-11-14: Settings table gains auto trip end delay (default to be decided), screen pause after View, speed limit value, and an optional driver name.
+- 2026-11-14: Speaker hardware in v1 (audio amplifier chip and small speaker) alongside the buzzer, which stays for beeps and character. Voice clips and spoken notifications are v1.5; speaker settings to be determined.
 
 ### Changed
 - Microcontroller upgraded in plan from ESP32 to ESP32-S3 (16 MB flash, 8 MB PSRAM) for headroom.
@@ -51,6 +52,7 @@ _While this project is still being planned, this section doubles as a running lo
 - 2026-11-14: Passenger-mode gesture (was hold Up and Down for 3 s) is back to to-be-decided; long presses never fire on release.
 - 2026-11-14: Replaced the stale "Fuel economy calibration" setting with "Calibrate estimated MPG from fill-up results"; the estimate stays independent of the fill-up tracker.
 - 2026-11-14: Docs cleanup: Out of Scope reworded for the v1 driver ID; README prerequisites and roadmap brought up to date; features and changelog put in order.
+- 2026-11-14: v1 cost estimate raised to about $90-170 (full build about $105-220) to include the speaker; pin estimate raised by about 3.
 
 ### Deprecated
 -

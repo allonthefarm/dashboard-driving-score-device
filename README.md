@@ -47,7 +47,7 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - Not designed for multiple cars in v1. Drivers: v1 only logs which driver drove each trip; per-driver settings and NFC recognition are later.
 
 ## Open Questions & Risks
-- **Budget.** The owner's ceiling is about **$500**; if the plan goes past that, re-evaluate. The v1 build is estimated at about $85-160 and the full build at about $100-210 (all prices approximate and unchecked), so there is plenty of room. Parts are still split into "v1" and "add later" to keep the first build simple.
+- **Budget.** The owner's ceiling is about **$500**; if the plan goes past that, re-evaluate. The v1 build is estimated at about $90-170 and the full build at about $105-220 (all prices approximate and unchecked), so there is plenty of room. Parts are still split into "v1" and "add later" to keep the first build simple.
 - **Scope creep.** The feature list has grown a lot. Mitigation: v1 is small (see Roadmap); everything else waits until v1 works.
 - **Scoring formula is a placeholder.** Thresholds (for example 0.30 g hard braking) are untested starting values. The owner plans to rework scoring later. Weights live in config, not hardcoded.
 - **Real-world data not yet collected.** Plan: record real drives with a phone sensor-logger app to tune thresholds before hardware exists.
@@ -55,7 +55,7 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - **GPS reception** on a dash (windshield coating, case placement) is unproven until tested. External antenna is planned.
 - **Power loss can corrupt the SD card.** Decided: supercapacitor hold-up is in v1, plus the log flushes about once per second. Risk to verify with real hardware: hold-up time must be long enough to close the file and save counters (a few seconds); a power-loss sense input is needed to trigger the shutdown routine.
 - **Battery safety.** LiPo in a hot dashboard is unsafe (parked cars can pass 60 °C). Use supercapacitor, or LiFePO4 with temperature cutoffs, if a battery is ever added.
-- **Pin count.** About 26 of roughly 34 usable pins are planned. Adding much more needs an I2C expander.
+- **Pin count.** About 29 of roughly 34 usable pins are planned (now including about 3 for the speaker's audio chip). The real number of usable pins is probably lower on the 8 MB PSRAM board variant (docs review item 15, still to decide). Adding much more needs an I2C expander.
 - **IMU choice.** MPU-6050 for the first prototype (cheap, well documented); ICM-42688-P or LSM6DSO is the upgrade. BNO055 has reported I2C problems on ESP32. Final pick open.
 - **Real-time clock.** Decided: include a DS3231 RTC in v1 (shares the I2C bus, no extra pins). Risk: cheap DS3231 boards sometimes try to charge a non-rechargeable CR2032 coin cell; use a quality breakout or a rechargeable LIR2032 cell, or remove the charge resistor.
 - **Scoring rework direction (not final).** Escalating penalties: each event is scored by severity tier and duration (longer costs more, with slowing growth); more events cost more; penalties are not divided by trip distance; a steadiness component gives credit for calm driving; the road itself never affects the driving score. Real-world g values need checking: everyday driving is typically under about 0.3 g, hard braking about 0.4-0.6 g, and most road cars top out near 0.8-1.0 g in corners, so examples of 1.5-2 g are race-car territory. Thresholds will be set from real recorded drives. Risk: bumps cause false accelerometer spikes, so events are cross-checked against GPS speed and gyro yaw rate. See USAGE.md Driving Score.
@@ -63,7 +63,7 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - **Driver profiles.** v1 logs the driver number only. Open for later: what is per driver versus per car (calibration, level offset, fuel counters and mileage are per car), and NFC (reader about $5-12, tags or keyfobs; a phone as the tag is unreliable with common readers; a menu fallback is always needed).
 - **GPS module memory.** The GPS module remembers its last position on its own (it uses it for fast fixes). Decided: not cleared, unless testing on real hardware shows it is needed for the setting to work properly.
 - **Passenger-mode gesture.** The quick way to turn the menu lock off while moving is to be decided. Long presses must fire at the normal time (not on release), so the earlier idea of holding Up and Down together for 3 seconds needs a different design or a different gesture.
-- **Speaker (idea, undecided).** A small speaker for spoken notifications (for example spoken calibration steps). Open: whether it replaces the buzzer, which version, and the pin budget.
+- **Speaker.** Decided: speaker hardware is in v1 (audio amplifier chip and small speaker) alongside the buzzer, which stays for beeps and character; voice clips and spoken notifications are v1.5; speaker settings are to be determined. Risks: it adds about 3 pins to a tight pin budget, and sound vibration can disturb the motion sensor, so the speaker must be mounted away from the IMU and the case designed to isolate it.
 - **Auto trip detection rules** (start on motion, end after how long stopped) are not defined yet.
 - **Mounting legality and safety.** Dash and windshield mounting rules vary by location; the menu lock while moving exists for safety, and is optional for passenger use. Owner is responsible for checking local rules.
 - **Bluetooth firmware updates (OTA)** are the hardest feature and lowest priority; needs dual flash slots and a rollback plan.
@@ -86,10 +86,12 @@ _One line each. Full behavior is in [USAGE.md](./USAGE.md). "v1" = first usable 
 - **(v1)** Guided manual calibration (still, accelerate to ~20 mph and brake, left turn, right turn) with beeps and progress bar; saved to flash.
 - **(v1)** Auto-level (fallback) and manual level adjust (pitch/roll offset, "zero here", nudge with buttons).
 - **(v1)** Driver ID: choose Driver 1-8 in the menu; the driver is logged with each trip. Settings are stored in car-wide and per-driver groups from the start so per-driver settings can be added later.
+- **(v1)** Speaker hardware (audio amplifier chip and small speaker) installed and wired alongside the buzzer; the firmware is designed to support it, with no voice features yet.
 - **(v1.5)** 0-60 timer with its own CSV file (zero_to_sixty.csv).
 - **(v1.5)** Fill-up tracker with GPS-based mileage counters, MPG per tank, and fuel_fillups.csv.
 - **(v1.5)** Fuel economy score (trip efficiency score, plus a tank MPG score when fill-ups are logged), separate from the driving score.
 - **(v1.5)** Estimated MPG per trip that works with or without the fill-up tracker; when fill-ups are logged, the device compares the estimate with the real tank MPG.
+- **(v1.5)** Spoken notifications from pre-recorded voice clips (for example spoken calibration steps); speaker settings to be determined. The buzzer stays for beeps.
 - **(v2)** Bluetooth Low Energy configuration with a physical on/off switch.
 - **(v2)** Optional small LiFePO4 battery so the unit stays on after power-off (trip summary display) and can be used on a desk.
 - **(v2 or v3)** Trip management in the menu: erase particular trips, clear all trips, or erase particular data from a trip (for example only its GPS location data).
@@ -112,7 +114,7 @@ _One line each. Full behavior is in [USAGE.md](./USAGE.md). "v1" = first usable 
 - **Repo:** GitHub, private for now.
 
 ### Hardware (planned)
-All prices approximate and unchecked. v1 build is estimated at about $85-160; full build about $100-210.
+All prices approximate and unchecked. v1 build is estimated at about $90-170; full build about $105-220.
 
 | Part | Suggested | v1? | Approx. cost (USD) |
 | --- | --- | --- | --- |
@@ -122,7 +124,8 @@ All prices approximate and unchecked. v1 build is estimated at about $85-160; fu
 | Display | 2.8"-3.5" IPS SPI TFT (ST7789 or ST7796), no touch | v1 | 10-20 |
 | Storage | microSD module (own bus) and a high-endurance 8-32 GB card | v1 | 8-15 |
 | Buttons | 5 tactile or panel-mount buttons | v1 | 4-10 |
-| Buzzer | Piezo | v1 | 1-2 |
+| Buzzer | Piezo (kept for beeps and character) | v1 | 1-2 |
+| Speaker and audio amplifier | I2S amplifier chip (for example MAX98357A) with a small 3 W speaker, mounted away from the IMU | v1 hardware; voice clips v1.5 | 5-12 |
 | Power | Quality 2 A USB car charger and USB-C cable | v1 | 10-17 |
 | Enclosure and mount | 3D-printed case and dash mount (or purchased case) | v1 | 5-15 |
 | Wiring and misc | Headers, wire, fuse, TVS diode | v1 | 5-10 |
@@ -175,8 +178,8 @@ dashboard-driving-score-device/
 ## Roadmap
 1. **Now:** finish planning (docs review in progress). The GitHub repo and the SESSION_NOTES workflow are set up.
 2. **No-hardware phase:** learn tools; calibration math in Python, then C++; scoring engine tested on fake and phone-recorded drives; trip state machine and button menu; screen layouts in a simulator; trip viewer.
-3. **v1 (hardware arrives):** hardware layer, live screens and animations, driving score, SD logging, guided calibration, level adjust, five-button menu, real-time clock, supercapacitor hold-up.
-4. **v1.5:** 0-60 timer, fill-up tracker, fuel economy score.
+3. **v1 (hardware arrives):** hardware layer, live screens and animations, driving score, SD logging, guided calibration, level adjust, five-button menu, real-time clock, supercapacitor hold-up, speaker hardware wired.
+4. **v1.5:** 0-60 timer, fill-up tracker, fuel economy score, voice clips and spoken notifications.
 5. **v2:** Bluetooth configuration with physical switch; optional LiFePO4 backup battery.
 6. **v2 or v3:** trip management menu (erase particular trips, clear all trips, erase particular data such as location from a trip).
 7. **Future:** build the catalog of possible screen data from the sensors; optional NFC driver profiles; a comfort / ride-character rating; phone viewing/download over Bluetooth, computer trip viewer polish, OBD-II, local Wi-Fi download, OTA firmware updates (lowest priority).

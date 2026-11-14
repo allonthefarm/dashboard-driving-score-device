@@ -27,3 +27,10 @@ Entry template:
 - Docs to update: none outstanding from this batch.
 - Open questions: review items 7-13 and 14-20 are still to be decided (logging detail, events file, v1 scoring scope, fuel inputs in v1, config file, trip start/end, first-boot flow, supercap, pin budget, heat, phone type, time zone, tools, accuracy check). Speaker idea undecided.
 - Next step: owner confirms this batch is correct, then go through the rest of the review list.
+
+## 2026-11-14 — Speaker decision (main session)
+- Done: Added speaker hardware to v1 plan, kept the buzzer, deferred voice clips and speaker settings to v1.5 / to be determined.
+- Decisions: Speaker (audio amplifier chip plus small speaker) is v1 hardware only; buzzer stays; speaker mounted away from the IMU.
+- Docs to update: none.
+- Open questions: pin budget now about 29 of roughly 34 (review item 15 still open).
+- Next step: continue with the rest of the docs review list (items 7-20).
