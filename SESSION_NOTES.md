@@ -48,3 +48,10 @@ Entry template:
 - Docs to update: none.
 - Open questions: pick a specific LiFePO4-capable charger / load-sharing module and cell (compare two or three); whether to also add the light sensor, barometer, and reserve connections for NFC and OBD so later additions need no rebuild; power-off/on trip continuity.
 - Next step: owner answers the "reserve hardware for later features" question.
+
+## 2026-11-14 — Hardware scope for v1 (main session)
+- Done: Barometer and light sensor added to v1 hardware; Bluetooth switch moved back to v2; NFC and OBD not planned for in v1 hardware; docs updated.
+- Decisions: Battery, speaker, barometer and light sensor are base features and belong in v1 hardware. Bluetooth, NFC and OBD are nice-to-have extras that may need small hardware additions later.
+- Docs to update: none.
+- Open questions: specific battery charger module and cell; auto trip start rule and power-off/on trip continuity; config file format confirmation; pin check on the chosen board.
+- Next step: owner chooses what to tackle next (first no-hardware sub-session, scoring numbers, or battery module research).

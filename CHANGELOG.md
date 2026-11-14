@@ -67,6 +67,10 @@ _While this project is still being planned, this section doubles as a running lo
 - 2026-11-14: Supercapacitor hold-up replaced by a small LiFePO4 backup battery in v1 (charger with load sharing, temperature sensor, full power-down when parked). It gives time for a clean shutdown, a trip summary after power-off, and ride-through of engine-start dips.
 - 2026-11-14: Design principle: v1 hardware includes everything v1 and v2 need, so v2 is firmware only. The Bluetooth slide switch and the backup battery move into v1 hardware; the optional v2 battery feature is removed.
 - 2026-11-14: v1 cost estimate adjusted to about $90-175; pin estimate to about 30 of roughly 34 (adds battery voltage sensing).
+- 2026-11-14: Light sensor (auto-dim) and barometer (relative altitude change, air temperature) moved into v1 hardware; the barometer's readings are logged in trip files. They share the I2C bus, so no extra pins.
+- 2026-11-14: Bluetooth switch moved back to v2 hardware, and NFC and OBD are not planned for in v1 hardware. The design principle is narrowed: v1 includes the base features (battery, speaker, barometer, light sensor) so they never need a rebuild; nice-to-have extras may need small hardware additions later.
+- 2026-11-14: v1 cost estimate now about $95-190 (full build about $110-225); pin estimate about 29 of roughly 34.
+- 2026-11-14: Shopping note added: the DS3231 clock and many IMUs share I2C address 0x68, so the IMU's address must be changed to 0x69.
 
 ### Deprecated
 -

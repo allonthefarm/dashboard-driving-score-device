@@ -48,7 +48,7 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - No iPhone support. Phone features target Android only.
 
 ## Open Questions & Risks
-- **Budget.** The owner's ceiling is about **$500**; if the plan goes past that, re-evaluate. The v1 build is estimated at about $90-175 and the full build at about $105-220 (all prices approximate and unchecked), so there is plenty of room. Parts are still split into "v1" and "add later" to keep the first build simple.
+- **Budget.** The owner's ceiling is about **$500**; if the plan goes past that, re-evaluate. The v1 build is estimated at about $95-190 and the full build at about $110-225 (all prices approximate and unchecked), so there is plenty of room. Parts are still split into "v1" and "add later" to keep the first build simple.
 - **Scope creep.** The feature list has grown a lot. Mitigation: v1 is small (see Roadmap); everything else waits until v1 works.
 - **Scoring formula is a placeholder.** Thresholds (for example 0.30 g hard braking) are untested starting values. The owner plans to rework scoring later. Weights live in config, not hardcoded.
 - **Real-world data not yet collected.** Plan: record real drives with a phone sensor-logger app to tune thresholds before hardware exists.
@@ -56,7 +56,7 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - **GPS reception** on a dash (windshield coating, case placement) is unproven until tested. External antenna is planned.
 - **Power loss can corrupt the SD card.** Decided: a small LiFePO4 backup battery is in v1 (instead of a supercapacitor), plus the log is flushed about once per second. The battery gives the time to close the file and save counters. Risk: if the battery is flat, disabled by heat or cold, or missing, power loss is instant like a plain USB device, so the once-per-second flush stays as the fallback and the device shows a battery warning.
 - **Battery safety and wear.** LiPo in a hot dashboard is unsafe (parked cars can pass 60 °C), so the v1 battery is LiFePO4, with a charger that supports it and a temperature sensor on the cell. LiFePO4 should not be charged above roughly 45 °C or below 0 °C, so in a hot or freezing car it simply will not charge and the device runs from USB power. Heat also shortens battery life (possibly a few years in a hot car). When parked and unplugged, the device must fully power down after a set time so the battery does not drain flat, and wake when USB power returns. Buy the cell and charger module from a reputable seller.
-- **Pin count.** About 30 of roughly 34 usable pins are planned (now including about 3 for the speaker's audio chip and 1 to read battery voltage). The real number of usable pins is probably lower on the 8 MB PSRAM board variant (docs review item 15, still to decide). Adding much more needs an I2C expander.
+- **Pin count.** About 29 of roughly 34 usable pins are planned (including about 3 for the speaker's audio chip and 1 to read battery voltage). The barometer and light sensor share the I2C bus and need no extra pins. The real number of usable pins is probably lower on the 8 MB PSRAM board variant (docs review item 15, still to decide). Adding much more needs an I2C expander.
 - **IMU choice.** MPU-6050 for the first prototype (cheap, well documented); ICM-42688-P or LSM6DSO is the upgrade. BNO055 has reported I2C problems on ESP32. Final pick open.
 - **Real-time clock.** Decided: include a DS3231 RTC in v1 (shares the I2C bus, no extra pins). Risk: cheap DS3231 boards sometimes try to charge a non-rechargeable CR2032 coin cell; use a quality breakout or a rechargeable LIR2032 cell, or remove the charge resistor.
 - **Scoring rework direction (not final).** Escalating penalties: each event is scored by severity tier and duration (longer costs more, with slowing growth); more events cost more; penalties are not divided by trip distance; a steadiness component gives credit for calm driving; the road itself never affects the driving score. Real-world g values need checking: everyday driving is typically under about 0.3 g, hard braking about 0.4-0.6 g, and most road cars top out near 0.8-1.0 g in corners, so examples of 1.5-2 g are race-car territory. Thresholds will be set from real recorded drives. Risk: bumps cause false accelerometer spikes, so events are cross-checked against GPS speed and gyro yaw rate. See USAGE.md Driving Score.
@@ -66,7 +66,7 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - **Passenger-mode gesture.** The quick way to turn the menu lock off while moving is to be decided. Long presses must fire at the normal time (not on release), so the earlier idea of holding Up and Down together for 3 seconds needs a different design or a different gesture.
 - **Speaker.** Decided: speaker hardware is in v1 (audio amplifier chip and small speaker) alongside the buzzer, which stays for beeps and character; voice clips and spoken notifications are v1.5; speaker settings are to be determined. Risks: it adds about 3 pins to a tight pin budget, and sound vibration can disturb the motion sensor, so the speaker must be mounted away from the IMU and the case designed to isolate it.
 - **Auto trip start and end.** Decided: off by default; trips start and end with the Shortcut button. When turned on, a trip ends after a configurable stop time (default 10 minutes). Open: the start rule (speed threshold), and what happens when power is lost and returns. The device can tell how long it was off from the real-time clock plus a saved shutdown time (or the last logged row if the shutdown save failed), so a power-off shorter than the stop time could continue the same trip. The owner will discuss this before it is designed.
-- **Battery power design.** Decided: small LiFePO4 battery in v1, no supercapacitor, and v1 hardware includes everything v2 needs so v2 is firmware only. Open: pick a specific charger / load-sharing module that supports LiFePO4 and has a temperature sensor input (compare two or three before the shopping list), battery size, how the board is powered from it (boost or regulator), and how long the post-trip summary stays on (setting, default 60 seconds).
+- **Battery power design.** Decided: small LiFePO4 battery in v1 as a base feature, no supercapacitor. Open: pick a specific charger / load-sharing module that supports LiFePO4 and has a temperature sensor input (compare two or three before the shopping list), battery size, how the board is powered from it (boost or regulator), and how long the post-trip summary stays on (setting, default 60 seconds).
 - **Config file format (proposed).** INI style (`config.ini`). Alternatives: JSON (very standard, but no comments and one typo breaks the file) or TOML (modern, but heavier on a small device). To be confirmed by the owner.
 - **Heat and sun.** A parked dashboard can pass 60 °C, which affects the screen, SD card, backup battery and the clock's coin cell, and sunlight can wash out the display. Check temperature ratings and pick a bright screen before buying.
 - **Mounting legality and safety.** Dash and windshield mounting rules vary by location; the menu lock while moving exists for safety, and is optional for passenger use. Owner is responsible for checking local rules.
@@ -94,6 +94,7 @@ _One line each. Full behavior is in [USAGE.md](./USAGE.md). "v1" = first usable 
 - **(v1)** Driver ID: choose Driver 1-8 in the menu; the driver is logged with each trip. Settings are stored in car-wide and per-driver groups from the start so per-driver settings can be added later.
 - **(v1)** Speaker hardware (audio amplifier chip and small speaker) installed and wired alongside the buzzer; the firmware is designed to support it, with no voice features yet.
 - **(v1)** First-time setup on first start: units, time zone and daylight saving, clock, driver, and an offer to calibrate.
+- **(v1)** Light sensor auto-dims the screen; barometer provides relative altitude change and air temperature (logged and available for screens).
 - **(After v1)** Steadiness credit in the driving score: credit for the share of moving time driven calmly.
 - **(v1.5)** 0-60 timer with its own CSV file (zero_to_sixty.csv).
 - **(v1.5)** Fill-up tracker with GPS-based mileage counters, MPG per tank, and fuel_fillups.csv.
@@ -121,9 +122,9 @@ _One line each. Full behavior is in [USAGE.md](./USAGE.md). "v1" = first usable 
 - **Repo:** GitHub, private for now.
 
 ### Hardware (planned)
-All prices approximate and unchecked. v1 build is estimated at about $90-175; full build about $105-220.
+All prices approximate and unchecked. v1 build is estimated at about $95-190; full build about $110-225.
 
-**Design principle (decided):** v1 hardware includes everything v1 and v2 need (backup battery, Bluetooth switch, speaker), so moving from v1 to v2 is firmware only.
+**Design principle (decided):** v1 hardware includes the base features (backup battery, speaker, barometer, light sensor), so they never need a rebuild. Nice-to-have extras (the Bluetooth switch, NFC reader, OBD-II) are not planned for in v1 hardware and may need small hardware additions later.
 
 | Part | Suggested | v1? | Approx. cost (USD) |
 | --- | --- | --- | --- |
@@ -140,9 +141,9 @@ All prices approximate and unchecked. v1 build is estimated at about $90-175; fu
 | Wiring and misc | Headers, wire, fuse, TVS diode | v1 | 5-10 |
 | Real-time clock | DS3231 breakout with coin cell (quality board or rechargeable LIR2032; see risks) | v1 | 2-8 |
 | Backup battery | Small LiFePO4 cell (1S, with protection) and a charger / load-sharing module that explicitly supports LiFePO4 and has a temperature sensor input, plus a boost or regulator to power the board. Never LiPo | v1 | 10-25 |
-| BLE switch | Slide switch (wired in v1; Bluetooth firmware arrives in v2) | v1 | 1 |
-| Light sensor | VEML7700 | later | 3-6 |
-| Barometer | BMP390 or BME280 | later | 3-8 |
+| BLE switch | Slide switch, added when Bluetooth is built (not part of v1 hardware) | v2 | 1 |
+| Light sensor | VEML7700 (auto-dims the screen; shares the I2C bus) | v1 | 3-6 |
+| Barometer | BMP390 or BME280 (relative altitude change and air temperature; shares the I2C bus) | v1 | 3-8 |
 | NFC reader (optional) | PN532 module with NTAG cards or keyfobs | future | 5-12 |
 | CAN transceiver / ELM327 | For OBD-II | future | 5-15 |
 
@@ -151,6 +152,7 @@ All prices approximate and unchecked. v1 build is estimated at about $90-175; fu
 - **Heat and sun:** check the operating temperature ratings of the screen, SD card, backup battery and the real-time clock's coin cell (a parked dash can pass 60 °C), and prefer a bright IPS screen that is readable in sunlight.
 - **Real-time clock:** buy a quality DS3231 board, or use a rechargeable LIR2032 cell, because cheap boards can try to charge a non-rechargeable coin cell.
 - **Speaker:** mount it away from the motion sensor.
+- **I2C addresses:** the DS3231 clock is fixed at address 0x68, and the MPU-6050 and many other IMUs also default to 0x68. Set the IMU's address pin so it uses 0x69 (check the datasheet), or the two will conflict on the shared bus.
 - **Backup battery (v1):** LiFePO4 only, never LiPo. The charger module must explicitly support LiFePO4 (about 3.6 V full charge), share the load with USB power, and have a temperature sensor input for the cell. Pick a specific module before buying; compare two or three.
 - **USB cable:** get one that carries data, not a charge-only cable, for programming the board.
 
@@ -202,10 +204,10 @@ dashboard-driving-score-device/
 ## Roadmap
 1. **Now:** finish planning (docs review in progress). The GitHub repo and the SESSION_NOTES workflow are set up.
 2. **No-hardware phase:** learn tools; calibration math in Python, then C++; scoring engine tested on fake and phone-recorded drives; trip state machine and button menu; screen layouts in a simulator; trip viewer.
-3. **v1 (hardware arrives):** hardware layer, live screens and animations, driving score, SD logging, guided calibration, level adjust, five-button menu, real-time clock, LiFePO4 backup battery, speaker hardware and Bluetooth switch wired.
+3. **v1 (hardware arrives):** hardware layer, live screens and animations, driving score, SD logging, guided calibration, level adjust, five-button menu, real-time clock, LiFePO4 backup battery, speaker hardware, barometer and light sensor.
 4. **v1 accuracy check (once the hardware works):** compare the device side by side with a phone sensor app (g-forces and tilt) and with the car's speedometer and a phone's GPS speed; record the differences; adjust calibration, filtering and thresholds until the readings can be trusted.
 5. **v1.5:** 0-60 timer, fill-up tracker, fuel economy score, voice clips and spoken notifications.
-6. **v2:** Bluetooth configuration (the physical switch is already wired in v1; v2 needs no hardware changes).
+6. **v2:** Bluetooth configuration; needs a small hardware addition (a physical on/off switch).
 7. **v2 or v3:** trip management menu (erase particular trips, clear all trips, erase particular data such as location from a trip).
 8. **Future:** build the catalog of possible screen data from the sensors; optional NFC driver profiles; a comfort / ride-character rating; phone viewing/download over Bluetooth, computer trip viewer polish, OBD-II, local Wi-Fi download, OTA firmware updates (lowest priority).
 

@@ -15,7 +15,8 @@ Plug the device into the car's USB power. It boots, finds GPS, and shows live dr
 - Small speaker (hardware in v1; spoken notifications arrive in v1.5), mounted away from the motion sensor.
 - SD card slot.
 - USB power input.
-- A slide switch that turns Bluetooth on or off (installed in v1; Bluetooth itself arrives in v2).
+- (v2) A slide switch that turns Bluetooth on or off, added when Bluetooth is built (not part of v1 hardware).
+- A light sensor (auto-dims the screen) and a barometer (altitude change, air temperature), inside the case.
 - A small backup battery inside the case (not user-visible; it charges from USB).
 
 ## Controls
@@ -77,7 +78,7 @@ Screens (cycled with View):
 
 Always-visible status bar: GPS state, SD state (logging, missing, full), trip active indicator, calibration status, current driver number. (v2: Bluetooth on/off.)
 
-Animations are driven directly by sensor input. Screen brightness is adjustable; with the optional light sensor (later), it dims automatically.
+Animations are driven directly by sensor input. Screen brightness is adjustable; the light sensor dims it automatically in low light (this can be turned off).
 
 ## Walkthrough: Guided Calibration (v1)
 Purpose: the device can be mounted at any angle, so readings must be rotated into the car's frame (forward, left, down). Run it in an empty parking lot. A passenger can run it.
@@ -141,7 +142,7 @@ Defaults are starting points to tune. "Buttons: No" means bulk or text entry, av
 | Shortcut button action (short / long press) | Trip start-stop / arm 0-60 | Yes | Yes |
 | Menu lock while moving (on/off), lock speed | On, 5 mph | Yes | Yes |
 | Time zone and daylight saving | Chosen in first-time setup | Yes | Yes |
-| Auto-dim with light sensor | On (when sensor present) | Yes | Yes |
+| Auto-dim with light sensor | On | Yes | Yes |
 | Show trip summary after power-off (seconds; uses the backup battery) | 60 | Yes | Yes |
 | Fuel tank size | None | Yes | Yes |
 | Reference MPG (EPA combined) | None | Yes | Yes |
@@ -165,7 +166,7 @@ Logging runs in the background during any trip and is not a separate state. It n
 ### Files on the SD card
 | File | Contents |
 | --- | --- |
-| One trip file per trip, named by date and time, for example `2026-10-18_1349.csv` | Header lines (starting with `#`) with the file format version, firmware version, calibration values and the driver number, then rows at 10-20 Hz. Each row summarizes its whole interval at the full sensor rate: timestamp (UTC), lat, lon (blank when location logging is off), GPS fix quality, speed, longitudinal g average and peak, lateral g average and peak, yaw rate, pitch, roll, vertical vibration level (RMS, gravity removed), vertical peak, maximum jerk, event flag (OBD fields later). A "peak" is the largest value in the interval, keeping its sign |
+| One trip file per trip, named by date and time, for example `2026-10-18_1349.csv` | Header lines (starting with `#`) with the file format version, firmware version, calibration values and the driver number, then rows at 10-20 Hz. Each row summarizes its whole interval at the full sensor rate: timestamp (UTC), lat, lon (blank when location logging is off), GPS fix quality, speed, longitudinal g average and peak, lateral g average and peak, yaw rate, pitch, roll, vertical vibration level (RMS, gravity removed), vertical peak, maximum jerk, relative altitude (from the barometer; absolute altitude is never logged), air temperature, event flag (OBD fields later). A "peak" is the largest value in the interval, keeping its sign |
 | `summary.csv`, one row per trip | Date, driver, duration, distance, average speed, driving score, fuel economy score (v1.5), event counts, fuel inputs logged from v1 so history builds up before the v1.5 fuel score (idle seconds, speed-swing energy per mile, time above efficient speed), estimated MPG raw and calibrated (v1.5) |
 | `events.csv`, one row per event | Trip file name, driver, start time (UTC), duration (s), type (hard braking, harsh acceleration, hard cornering, speeding), peak value (g, or speed for speeding), speed at the peak, confirmed by GPS or gyro (yes/no, so bump spikes are recorded but flagged), lat and lon (blank when location logging is off) |
 | `zero_to_sixty.csv` (v1.5), one row per run | Date and time, time to 60, peak g, GPS quality at start and end, rolling-start flag, valid/cancelled flag |
@@ -178,7 +179,7 @@ The sensors and event detection always run at full speed on the device. The log 
 ### Storage behavior
 - **Logging on/off** is a setting. When off, the SD card is not touched.
 - **When full:** Stop (show a "card full" icon) or Overwrite (delete the oldest whole trip files until there is room; never delete part of a file). Overwrite starts when free space drops below the threshold (default 50 MB), not at zero.
-- Format: FAT32; use a quality 8-32 GB card. A trip file with about 18 columns at 10 Hz is roughly 3-6 MB per hour (an estimate to check against real files), so even a small card holds a very long time.
+- Format: FAT32; use a quality 8-32 GB card. A trip file with about 20 columns at 10 Hz is roughly 3-7 MB per hour (an estimate to check against real files), so even a small card holds a very long time.
 - **If the SD card is missing:** the device still works and shows a "no card" icon. (v1.5: the last several fill-ups are kept in internal flash and copied to the card later.)
 - Writes are buffered in RAM and flushed about once per second.
 
@@ -238,7 +239,7 @@ A separate 0-100 score from the driving score, in two parts. All thresholds and 
 - The speaker is mounted away from the IMU, and the case isolates it, because sound vibration can disturb the motion sensor.
 
 ## Walkthrough: Bluetooth (v2)
-- Bluetooth Low Energy is built into the ESP32. A physical slide switch controls it: when off, the firmware never starts the BLE radio.
+- Bluetooth Low Energy is built into the ESP32. A physical slide switch controls it (added to the hardware when Bluetooth is built; it is not part of v1): when off, the firmware never starts the BLE radio.
 - Over Bluetooth the user can change any setting (same list as the buttons), enter level offsets, start calibration, and edit scoring weights, from an Android phone: a generic app first (for example nRF Connect) and a simple Web Bluetooth page in Chrome later. iPhone is not supported.
 - **Future:** view past trips on the phone; download whole trips or parts of trips; update firmware over Bluetooth (lowest priority, needs dual flash slots and rollback; until then, update by USB).
 
@@ -278,7 +279,7 @@ Separate from the driving score and the fuel score. The driving score is about w
 The sensors can provide more than the v1 screens show. A future task is to build a complete list of everything available from the GPS, IMU and other sensors, mark what is useful to show on a screen, and then decide new screens. Starter list (to be expanded and checked against the real hardware):
 - **From GPS:** heading (direction of travel, valid when moving), time of day, date, altitude, number of satellites, fix quality, speed accuracy.
 - **From the IMU:** pitch, roll, peak g since trip start, current g, yaw rate.
-- **From the barometer (later hardware):** altitude change, air temperature, pressure trend.
+- **From the barometer (v1 hardware):** altitude change, air temperature, pressure trend.
 - **From trip math:** maximum speed, elapsed time, stopped time, moving average speed, best 0-60 time, estimated range (v1.5).
 - **From the power system:** battery voltage and charge state, charging blocked by temperature, input voltage.
 
