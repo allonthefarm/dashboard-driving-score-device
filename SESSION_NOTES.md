@@ -55,3 +55,10 @@ Entry template:
 - Docs to update: none.
 - Open questions: specific battery charger module and cell; auto trip start rule and power-off/on trip continuity; config file format confirmation; pin check on the chosen board.
 - Next step: owner chooses what to tackle next (first no-hardware sub-session, scoring numbers, or battery module research).
+
+## 2026-11-14 — PCB idea and shopping documents (main session)
+- Done: Logged a custom PCB as a future (v2) consideration. Created `shopping/SHOPPING_LIST.md`, `shopping/PARTS_COMPARISON.md` and `shopping/SESSION_PROMPT.md` for the shopping session.
+- Decisions: PCB is undecided and not for v1; keep a pin-to-pin record during v1. Shopping is split into a checklist (what the device needs) and a comparison document (real candidates with screenshots), worked on in a separate shopping session. Black Friday 2026 is November 27.
+- Docs to update: shopping session may update only the status and chosen-part columns of the shopping list; README, USAGE, CONTRIBUTING and CHANGELOG changes go through the main session.
+- Open questions: specific battery charger / load-sharing module and cell; power architecture (boost or regulator); whether the car's outlet switches off with the ignition; exact board pinout check.
+- Next step: owner starts the shopping session with the prompt in `shopping/SESSION_PROMPT.md`.

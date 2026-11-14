@@ -43,6 +43,9 @@ _While this project is still being planned, this section doubles as a running lo
 - 2026-11-14: First-time setup on first start (units, time zone and daylight saving, clock, driver, optional calibration), and time zone and daylight saving added to settings. Row timestamps are UTC; file names and screens use local time.
 - 2026-11-14: Roadmap step added: v1 accuracy check against a phone sensor app, the speedometer and phone GPS.
 - 2026-11-14: README gains shopping list notes (pin check, heat and sun, clock cell, speaker placement, LiFePO4 only, data USB cable) and a tools list (breadboard to buy; jumper wires to check).
+- 2026-11-14: Custom PCB logged as a future consideration for the v2 hardware revision (undecided; not for v1). Reasons: reliability in a hot, vibrating car, size, a rigid IMU mount, easy repeat builds if others want one, and a learning project. Plan: keep a pin-to-pin record during v1 as the future schematic, and decide after the v1 accuracy check.
+- 2026-11-14: `shopping/` folder added: SHOPPING_LIST.md (buying checklist with specs and must-haves), PARTS_COMPARISON.md (candidate parts compared by component, with screenshots), and SESSION_PROMPT.md (starts the shopping session). Shopping is timed for Black Friday 2026 (November 27).
+- 2026-11-14: Case filament note: print the case in PETG, ASA or ABS, not PLA (heat).
 
 ### Changed
 - Microcontroller upgraded in plan from ESP32 to ESP32-S3 (16 MB flash, 8 MB PSRAM) for headroom.

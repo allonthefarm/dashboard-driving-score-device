@@ -67,6 +67,7 @@ The detailed behavior of every screen, button, flow and file format is in [USAGE
 - **Speaker.** Decided: speaker hardware is in v1 (audio amplifier chip and small speaker) alongside the buzzer, which stays for beeps and character; voice clips and spoken notifications are v1.5; speaker settings are to be determined. Risks: it adds about 3 pins to a tight pin budget, and sound vibration can disturb the motion sensor, so the speaker must be mounted away from the IMU and the case designed to isolate it.
 - **Auto trip start and end.** Decided: off by default; trips start and end with the Shortcut button. When turned on, a trip ends after a configurable stop time (default 10 minutes). Open: the start rule (speed threshold), and what happens when power is lost and returns. The device can tell how long it was off from the real-time clock plus a saved shutdown time (or the last logged row if the shutdown save failed), so a power-off shorter than the stop time could continue the same trip. The owner will discuss this before it is designed.
 - **Battery power design.** Decided: small LiFePO4 battery in v1 as a base feature, no supercapacitor. Open: pick a specific charger / load-sharing module that supports LiFePO4 and has a temperature sensor input (compare two or three before the shopping list), battery size, how the board is powered from it (boost or regulator), and how long the post-trip summary stays on (setting, default 60 seconds).
+- **Custom PCB (future consideration, undecided).** Not for v1. A custom circuit board for the v2 hardware revision is worth considering: it removes loose wires (heat and vibration are hard on jumper leads), shrinks the electronics so the case is easier, mounts the motion sensor rigidly and square, makes extra units quick to build (a few other people may want one if v1 works well), and is a good project to learn PCB design on (KiCad is free). Cautions: boards cost little (about $5-30 for a small batch) but take 1-2 weeks to arrive and the first version often needs a second try; pin mistakes are costly, so the pin budget must be checked first; if the modules fit together neatly, a PCB may not be needed. Plan: during v1, keep a clean record of which pin connects to what (it becomes the schematic), then decide after the v1 accuracy check. The backup-battery charger and power section may be the first reason to want one if no ready-made module fits.
 - **Config file format (proposed).** INI style (`config.ini`). Alternatives: JSON (very standard, but no comments and one typo breaks the file) or TOML (modern, but heavier on a small device). To be confirmed by the owner.
 - **Heat and sun.** A parked dashboard can pass 60 °C, which affects the screen, SD card, backup battery and the clock's coin cell, and sunlight can wash out the display. Check temperature ratings and pick a bright screen before buying.
 - **Mounting legality and safety.** Dash and windshield mounting rules vary by location; the menu lock while moving exists for safety, and is optional for passenger use. Owner is responsible for checking local rules.
@@ -155,6 +156,8 @@ All prices approximate and unchecked. v1 build is estimated at about $95-190; fu
 - **I2C addresses:** the DS3231 clock is fixed at address 0x68, and the MPU-6050 and many other IMUs also default to 0x68. Set the IMU's address pin so it uses 0x69 (check the datasheet), or the two will conflict on the shared bus.
 - **Backup battery (v1):** LiFePO4 only, never LiPo. The charger module must explicitly support LiFePO4 (about 3.6 V full charge), share the load with USB power, and have a temperature sensor input for the cell. Pick a specific module before buying; compare two or three.
 - **USB cable:** get one that carries data, not a charge-only cable, for programming the board.
+- **Case filament:** PLA softens at roughly 55-60 °C and a sunlit dash gets hotter than that, so print the case in PETG, ASA or ABS.
+- **Shopping documents:** the buying checklist with specs and must-haves is [shopping/SHOPPING_LIST.md](./shopping/SHOPPING_LIST.md); real candidate parts are compared in [shopping/PARTS_COMPARISON.md](./shopping/PARTS_COMPARISON.md).
 
 ### Tools and prototyping supplies
 | Item | Status |
@@ -163,6 +166,7 @@ All prices approximate and unchecked. v1 build is estimated at about $95-190; fu
 | 3D printer and filament (for the case and mount) | Already owned |
 | Breadboard | Need to buy (about $5-10, approximate) |
 | Jumper wires | Check what is on hand; buy a kit if needed (about $5-10, approximate) |
+| Filament for the case | Check what is on hand: PETG, ASA or ABS (not PLA) |
 
 ## Getting Started
 
@@ -189,6 +193,11 @@ dashboard-driving-score-device/
 ├── CONTRIBUTING.md      how work gets done (solo + sessions)
 ├── CHANGELOG.md         decisions and changes log
 ├── SESSION_NOTES.md     sub-sessions write results here
+├── shopping/            hardware shopping documents
+│   ├── SHOPPING_LIST.md      what to buy, with specs and must-haves
+│   ├── PARTS_COMPARISON.md   candidate parts compared, by component
+│   ├── SESSION_PROMPT.md     prompt that starts the shopping session
+│   └── screenshots/          product page screenshots (no personal info)
 ├── .gitignore           keeps build output and private drive logs out of Git
 └── (planned, not created yet)
     ├── firmware/        PlatformIO project (C++)
@@ -202,12 +211,12 @@ dashboard-driving-score-device/
 ```
 
 ## Roadmap
-1. **Now:** finish planning (docs review in progress). The GitHub repo and the SESSION_NOTES workflow are set up.
+1. **Now:** finish planning (docs review in progress) and shop for v1 hardware, timed for Black Friday 2026 (see `shopping/`). The GitHub repo and the SESSION_NOTES workflow are set up.
 2. **No-hardware phase:** learn tools; calibration math in Python, then C++; scoring engine tested on fake and phone-recorded drives; trip state machine and button menu; screen layouts in a simulator; trip viewer.
 3. **v1 (hardware arrives):** hardware layer, live screens and animations, driving score, SD logging, guided calibration, level adjust, five-button menu, real-time clock, LiFePO4 backup battery, speaker hardware, barometer and light sensor.
 4. **v1 accuracy check (once the hardware works):** compare the device side by side with a phone sensor app (g-forces and tilt) and with the car's speedometer and a phone's GPS speed; record the differences; adjust calibration, filtering and thresholds until the readings can be trusted.
 5. **v1.5:** 0-60 timer, fill-up tracker, fuel economy score, voice clips and spoken notifications.
-6. **v2:** Bluetooth configuration; needs a small hardware addition (a physical on/off switch).
+6. **v2:** Bluetooth configuration; needs a small hardware addition (a physical on/off switch). A custom PCB for this hardware revision is being considered (undecided; see Open Questions).
 7. **v2 or v3:** trip management menu (erase particular trips, clear all trips, erase particular data such as location from a trip).
 8. **Future:** build the catalog of possible screen data from the sensors; optional NFC driver profiles; a comfort / ride-character rating; phone viewing/download over Bluetooth, computer trip viewer polish, OBD-II, local Wi-Fi download, OTA firmware updates (lowest priority).
 
